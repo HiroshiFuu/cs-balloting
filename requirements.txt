@@ -1,0 +1,12 @@
+asgiref
+autopep8
+django-allauth
+Django==2.2.14
+pycodestyle
+pytz
+sqlparse
+dj-database-url
+python-decouple
+gunicorn
+whitenoise
+Werkzeug
