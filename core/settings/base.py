@@ -30,12 +30,13 @@ DJANGO_APPS = [
 ]
 
 LOCAL_APPS = [
-    'ballot'  # Enable the inner app 
+    'authentication',
+    'ballot',  # Enable the inner app 
 ]
 
 THIRD_PARTY_APPS = [
-    'allauth',
-    'allauth.account',
+    # 'allauth',
+    # 'allauth.account',
     'django_extensions',
 ]
 
@@ -58,7 +59,7 @@ AUTHENTICATION_BACKENDS = [
     # Needed to login by username in Django admin, regardless of `allauth`
     'django.contrib.auth.backends.ModelBackend',
     # `allauth` specific authentication methods, such as login by e-mail
-    'allauth.account.auth_backends.AuthenticationBackend',
+    # 'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -146,6 +147,8 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(CORE_DIR, 'static'),
 )
+
+AUTH_USER_MODEL = "authentication.User"
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
