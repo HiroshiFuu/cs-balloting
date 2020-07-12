@@ -55,5 +55,10 @@ class PollResult(LogMixin):
     poll = models.OneToOneField(Poll, on_delete=models.CASCADE)
     result = JSONField(blank=True, null=True)
 
+    class Meta:
+        managed = True
+        verbose_name = 'Poll Result'
+        verbose_name_plural = 'Poll Results'
+
     def __str__(self):
         return '{}: {}'.format(self.poll, self.result)

@@ -13,6 +13,11 @@ from .models import Poll, PollOption
 from .models import Voting
 from .models import PollResult
 
+from django.db.models import Count
+from django.db.models import Sum
+
+from collections import defaultdict
+
 
 @login_required(login_url='/login/')
 def index(request):
@@ -28,25 +33,38 @@ def polls(request):
 @login_required(login_url='/login/')
 def poll(request, poll_id):
     poll = get_object_or_404(Poll, pk=poll_id)
+    vote = Voting.objects.filter(user=request.user, poll_option__poll=poll).first()
+    if vote is not None:
+        return HttpResponseRedirect(reverse('ballot:vote_done', args=(poll.id, vote.poll_option.id)))
     return render(request, 'ballot.html', {'poll': poll})
 
 
 @login_required(login_url='/login/')
 def vote(request, poll_id):
     poll = get_object_or_404(Poll, pk=poll_id)
-    print('poll_option', request.POST['poll_option'])
+    # print('poll_option', request.POST['poll_option'])
     try:
         poll_option = poll.options.get(pk=request.POST['poll_option'])
         # print(poll_option)
         # print(request.user.weight)
-        vote = Voting.objects.create(user=request.user, poll_option=poll_option)
-        print(vote)
+        vote, created = Voting.objects.get_or_create(user=request.user, poll_option=poll_option)
+        # print(vote, created)
+        if created:
+            print('Something Wrong', 'vote', poll_id)
+            return HttpResponseRedirect(reverse('ballot:vote_done', args=(poll.id, poll_option.id)))
         poll_result, created = PollResult.objects.get_or_create(poll=poll)
-        print(poll_result)
+        # print(created, poll_result)
+        votings = Voting.objects.filter(poll_option__poll=poll).values('poll_option__text').annotate(num_votes=Count('poll_option__id'), total_votes=Sum('user__weight'))
+        # print(votings)
         results = {}
-        for vote in Voting.objects.filter(poll_option__poll=poll):
-            print(vote)
-
+        for option in poll.options.all():
+            results[option.text] = 0
+        # print(results)
+        for voting in votings:
+            results[voting['poll_option__text']] = voting['total_votes']
+        # print(results)
+        poll_result.result = results
+        poll_result.save()
         return HttpResponseRedirect(reverse('ballot:vote_done', args=(poll.id, poll_option.id)))
     except (KeyError, Poll.DoesNotExist, PollOption.DoesNotExist):
         return HttpResponseRedirect(reverse('ballot:poll', args=(poll.id,)))
