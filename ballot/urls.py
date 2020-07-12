@@ -3,6 +3,7 @@
 from django.urls import path, re_path
 from ballot import views
 
+app_name = 'ballot'
 urlpatterns = [
     # Matches any html file 
     re_path(r'^.*\.html', views.pages, name='pages'),
@@ -10,5 +11,7 @@ urlpatterns = [
     # The home page
     path('', views.index, name='home'),
 
-    path('ballot', views.ballot, name='ballot'),
+    path('polls/', views.polls, name='polls'),
+    path('poll/<int:poll_id>/', views.poll, name='poll'),
+    path('<int:poll_id>/vote/', views.vote, name='vote'),
 ]

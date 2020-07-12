@@ -18,7 +18,7 @@
               <p class="text-center">
                 User Created.
                 <br />
-                Please <strong><a href={% url 'login' %}>authenticate</a></strong> using the new account.
+                Please <strong><a href="{% url 'login' %}">authenticate</a></strong> using the new account.
               </p>  
             
             </div>
@@ -36,7 +36,7 @@
                 {% if msg %}
                   {{ msg | safe }}
                 {% else %}
-                  Add your credentials or <strong><a href={% url 'login' %} >authenticate</a></strong> with an existing account.
+                  Add your credentials or <strong><a href="{% url 'login' %}" >authenticate</a></strong> with an existing account.
                 {% endif %}  
                 
               </div>
@@ -79,7 +79,7 @@
 
               <div class="form-group">
                 <label class="form-label">
-                  Vote Weight
+                  Weight
                 </label>
                 {{ form.weight }}
               </div>
