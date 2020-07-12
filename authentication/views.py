@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.forms.utils import ErrorList
 from django.http import HttpResponse
-from .forms import LoginForm, SignUpForm
+from .forms import LoginForm, CustomUserCreationForm
 
 
 def login_view(request):
@@ -39,7 +39,7 @@ def register_user(request):
     success = False
 
     if request.method == "POST":
-        form = SignUpForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             username = form.cleaned_data.get("username")
@@ -54,6 +54,6 @@ def register_user(request):
         else:
             msg = 'Form is not valid'    
     else:
-        form = SignUpForm()
+        form = CustomUserCreationForm()
 
     return render(request, "accounts/register.html", {"form": form, "msg" : msg, "success" : success })

@@ -1,12 +1,11 @@
 # -*- encoding: utf-8 -*-
 
-import os
+import environ
 from decouple import config
-import dj_database_url
+import os
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-CORE_DIR = os.path.dirname(os.path.dirname(__file__))
-PROJECT_DIR = os.path.dirname(CORE_DIR)
+CORE_DIR = environ.Path(__file__) - 2 # core/settings/base.py - 2 = core/
+PROJECT_DIR = CORE_DIR - 1
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='S#perS3crEt_1122')
@@ -29,18 +28,18 @@ DJANGO_APPS = [
     'django.contrib.sites',
 ]
 
-LOCAL_APPS = [
-    'authentication',
-    'ballot',  # Enable the inner app 
-]
-
 THIRD_PARTY_APPS = [
     # 'allauth',
     # 'allauth.account',
     'django_extensions',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
+LOCAL_APPS = [
+    'authentication',
+    'ballot',  # Enable the inner app 
+]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 SITE_ID = 1
 
@@ -121,6 +120,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -128,6 +130,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+    {
+        'NAME': 'MysteryOfAntiques.password_validation.UpperLowerNumericPasswordValidator',
+    }
 ]
 
 LANGUAGE_CODE = 'en-us'
@@ -140,18 +145,23 @@ USE_L10N = True
 
 USE_TZ = True
 
-
-STATIC_ROOT = os.path.join(CORE_DIR, 'staticfiles')
+PARENT_DIR = PROJECT_DIR - 1
+STATIC_ROOT = str(PARENT_DIR('STATIC_ROOT', 'static'))
 STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (
     os.path.join(CORE_DIR, 'static'),
 )
 
-AUTH_USER_MODEL = "authentication.User"
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
 
-LOGIN_REDIRECT_URL = 'home'
-LOGOUT_REDIRECT_URL = 'home'
+AUTH_USER_MODEL = 'authentication.User'
+
+LOGIN_REDIRECT_URL = 'ballot:home'
+LOGOUT_REDIRECT_URL = 'ballot:home'
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_REQUIRED = True
 
