@@ -1,8 +1,10 @@
 # -*- encoding: utf-8 -*-
 
 from django.db import models
-
 from django.utils import timezone
+from django.conf import settings
+
+from jsonfield import JSONField
 
 # Create your models here.
 class LogMixin(models.Model):
@@ -38,4 +40,20 @@ class PollOption(LogMixin):
         verbose_name_plural = 'Poll Options'
 
     def __str__(self):
-        return '{}: {}'.format(self.text, self.poll.title)
+        return '{}: {}'.format(self.poll, self.text)
+
+
+class Voting(LogMixin):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    poll_option = models.ForeignKey(PollOption, related_name='votes', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.user, self.poll_option.poll, self.poll_option.text)
+
+
+class PollResult(LogMixin):
+    poll = models.OneToOneField(Poll, on_delete=models.CASCADE)
+    result = JSONField(blank=True, null=True)
+
+    def __str__(self):
+        return '{}: {}'.format(self.poll, self.result)
