@@ -1,0 +1,207 @@
+{% extends "layouts/base.html" %}
+{% load static i18n %}
+{% block title %} Dashboard {% endblock %}
+{% block styles %}
+<style>
+  .amCharts {
+    height: 240px;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="my-3 my-md-5">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">
+        Ballot Dashboard
+      </h1>
+    </div>
+    <div class="row row-cards row-deck">
+      <div class="col-12">
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+              <thead>
+                <tr>
+                  <th>Poll</th>
+                  <th class="text-center">Completion Rate</th>
+                  <th>Days Left</th>
+                  <th>Activity</th>
+                  <th class="text-center"><i class="icon-settings"></i></th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for poll_details in polls_details %}
+                <tr>
+                  <td>
+                    <div>{{ poll_details.title }}</div>
+                    <div class="small text-muted">
+                      Created: {{ poll_details.created_at }}
+                    </div>
+                  </td>
+                  <td class="text-center">
+                    <div class="mx-auto chart-circle chart-circle-xs" data-value="{{ poll_details.complete_rate|floatformat:2 }}" data-thickness="3" data-color="blue">
+                      <div class="chart-circle-value">{{ poll_details.complete|floatformat:0 }}%</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="clearfix">
+                      <div class="float-left">
+                        <strong>{{ poll_details.days_left|stringformat:"d" }} days</strong>
+                      </div>
+                      <div class="float-right">
+                        <small class="text-muted">{{ poll_details.created_at|date:"b d, Y" }} - {{ poll_details.end_date }}</small>
+                      </div>
+                    </div>
+                    <div class="progress progress-xs">
+                      <div class="progress-bar bg-yellow" role="progressbar" style="width: {{ poll_details.days_left_ratio|floatformat:1 }}%" aria-valuenow="{{ poll_details.days_left_ratio|floatformat:1 }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="small text-muted">{% if poll_details.latest %}Last vote{% else %}No vote yet{% endif %}</div>
+                    <div>{{ poll_details.latest }}</div>
+                  </td>
+                  <td class="text-center">
+                    <div class="item-action dropdown">
+                      <a href="javascript:void(0)" data-toggle="dropdown" class="icon"><i class="fe fe-more-vertical"></i></a>
+                      <div class="dropdown-menu dropdown-menu-right">
+                        <a href="javascript:void(0)" class="dropdown-item"><i class="dropdown-icon fe fe-eye"></i>Show Stats</a>
+                        <a href="{% url 'admin:ballot_poll_change' poll_details.id %}" target="_blank" class="dropdown-item"><i class="dropdown-icon fe fe-edit"></i>Manage</a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Poll Stats - {{ chart_data.title }}</h3>
+          </div>
+          <div class="row">
+            <div id="chartdiv_vote" class="amCharts col-6"></div>
+            <div id="chartdiv_count" class="amCharts col-6"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Votings</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table card-table table-vcenter text-nowrap datatable">
+              <thead>
+                <tr>
+                  <th class="w-1">No.</th>
+                  <th>User</th>
+                  <th>Poll</th>
+                  <th>Poll Option</th>
+                  <th>Voted At</th>
+                  <th>Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for voting in votings %}
+                <tr>
+                  <td><span class="text-muted">{{ voting.id }}</span></td>
+                  <td>{{ voting.user.username }}</td>
+                  <td>{{ voting.poll_option.poll.title }}</td>
+                  <td>{{ voting.poll_option.text }}</td>
+                  <td>{{ voting.created_at }}</td>
+                  <td>{{ voting.user.weight }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <script>
+            require(["datatables", "jquery"], function(datatable, $) {
+              $(".datatable").DataTable({
+                "paging": true,
+                "info": true,
+                "ordering": true,
+                "searchin": true,
+                "columns": [
+                  { "searchable": false },
+                  { "searchable": true },
+                  { "searchable": true },
+                  { "searchable": true },
+                  { "searchable": false },
+                  { "searchable": true }
+                ]
+              });
+            });
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="{% static '/amCharts/core.js' %}" type="text/javascript"></script>
+<script src="{% static '/amCharts/charts.js' %}" type="text/javascript"></script>
+<script src="{% static '/amCharts/themes/animated.js' %}" type="text/javascript"></script>
+<script src="{% static '/amCharts/themes/material.js' %}"></script>
+<script src="{% static '/amCharts/themes/kelly.js' %}"></script>
+<script>
+require(["jquery"], function() {
+  $(".nav-link").removeClass("active");
+  $(".nav-link.dashboard").addClass("active");
+
+  function populate_stat_charts(chart_data) {
+    am4core.ready(function() {
+      // Themes begin
+      am4core.useTheme(am4themes_animated);
+      // Themes end
+      populate_chart(am4themes_material, "chartdiv_vote", chart_data, "votes", "option");
+      populate_chart(am4themes_kelly, "chartdiv_count", chart_data, "counts", "option");
+    }); // end am4core.ready()
+  }
+
+  function populate_chart(theme, chart_div, chart_data, data_value, data_category) {
+    am4core.useTheme(theme);
+    var chart = am4core.create(chart_div, am4charts.PieChart);
+    chart.hiddenState.properties.opacity = 0; // this creates initial fade-in
+    chart.data = chart_data;
+    chart.radius = am4core.percent(70);
+    chart.innerRadius = am4core.percent(40);
+    chart.startAngle = 180;
+    chart.endAngle = 360;
+
+    var series = chart.series.push(new am4charts.PieSeries());
+    series.dataFields.value = data_value;
+    series.dataFields.category = data_category;
+
+    series.slices.template.cornerRadius = 7;
+    series.slices.template.innerCornerRadius = 5;
+    series.slices.template.draggable = false;
+    series.slices.template.inert = false;
+    series.alignLabels = false;
+
+    series.hiddenState.properties.startAngle = 90;
+    series.hiddenState.properties.endAngle = 90;
+
+    chart.legend = new am4charts.Legend();
+
+    let label = series.createChild(am4core.Label);
+    label.text = data_value;
+    label.horizontalCenter = "middle";
+    label.verticalCenter = "middle";
+    label.fontSize = 32;
+    label.y = -20;
+  }
+
+  $(document).ready(function() {
+    var chart_data = {{ chart_data.data|safe }};
+    populate_stat_charts(chart_data);
+  });
+});
+</script>
+{% endblock javascripts %}

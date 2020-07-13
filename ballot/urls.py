@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from django.urls import path, re_path
+
 from ballot import views
 
 app_name = 'ballot'
@@ -11,6 +12,8 @@ urlpatterns = [
     # The home page
     path('', views.index, name='home'),
 
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('voting_result_json/<int:poll_id>/', views.voting_result_json, name='voting_result_json'),
     path('polls/', views.polls, name='polls'),
     path('poll/<int:poll_id>/', views.poll, name='poll'),
     path('<int:poll_id>/vote/', views.vote, name='vote'),
