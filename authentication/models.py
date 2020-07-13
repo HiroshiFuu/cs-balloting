@@ -7,5 +7,5 @@ from django.utils.translation import gettext as _
 
 # Create your models here.
 class User(AbstractUser):
-    weight = models.PositiveSmallIntegerField('Vote Weighting', blank=False)
+    weight = models.PositiveSmallIntegerField('Vote Weighting', null=True, blank=False)
     email = models.EmailField(_('email address'), blank=False)

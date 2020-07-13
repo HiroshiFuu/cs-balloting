@@ -49,7 +49,7 @@ def vote(request, poll_id):
         # print(request.user.weight)
         vote, created = Voting.objects.get_or_create(user=request.user, poll_option=poll_option)
         # print(vote, created)
-        if created:
+        if not created:
             print('Something Wrong', 'vote', poll_id)
             return HttpResponseRedirect(reverse('ballot:vote_done', args=(poll.id, poll_option.id)))
         poll_result, created = PollResult.objects.get_or_create(poll=poll)
