@@ -65,7 +65,7 @@
                     <div class="item-action dropdown">
                       <a href="javascript:void(0)" data-toggle="dropdown" class="icon"><i class="fe fe-more-vertical"></i></a>
                       <div class="dropdown-menu dropdown-menu-right">
-                        <a href="javascript:void(0)" class="dropdown-item"><i class="dropdown-icon fe fe-eye"></i>Show Stats</a>
+                        <a href="#" class="dropdown-item stats_link" data-url="{% url 'ballot:voting_result_json' poll_details.id %}"><i class="dropdown-icon fe fe-eye"></i>Show Stats</a>
                         <a href="{% url 'admin:ballot_poll_change' poll_details.id %}" target="_blank" class="dropdown-item"><i class="dropdown-icon fe fe-edit"></i>Manage</a>
                       </div>
                     </div>
@@ -80,7 +80,7 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Poll Stats - {{ chart_data.title }}</h3>
+            <h3 id="stats_title" class="card-title">Poll Stats - {{ chart_data.title }}</h3>
           </div>
           <div class="row">
             <div id="chartdiv_vote" class="amCharts col-6"></div>
@@ -155,6 +155,24 @@ require(["jquery"], function() {
   $(".nav-link").removeClass("active");
   $(".nav-link.dashboard").addClass("active");
 
+  function update_poll_stats(url) {
+    // console.log("update_poll_stats", url);
+    $.ajax({
+      type: "GET",
+      url: url,
+      success: function (response) {
+        // on successfull creating object
+        console.log("update_poll_stats", response);
+        $("#stats_title").text("Poll Stats - " + response.title);
+        populate_stat_charts(response.data);
+      },
+      error: function (response) {
+        // alert the error if any error occured
+        console.error("update_poll_stats", response);
+      }
+    })
+  }
+
   function populate_stat_charts(chart_data) {
     am4core.ready(function() {
       // Themes begin
@@ -196,11 +214,22 @@ require(["jquery"], function() {
     label.verticalCenter = "middle";
     label.fontSize = 32;
     label.y = -20;
+
+    am4core.unuseTheme(theme);
   }
 
   $(document).ready(function() {
     var chart_data = {{ chart_data.data|safe }};
     populate_stat_charts(chart_data);
+
+    // console.log("url", $(".stats_link").first().data("url"));
+    $(".stats_link").each(function() {
+      // console.log("url", $(this).data("url"));
+      $(this).click(function() {
+        update_poll_stats($(this).data("url"));
+        return false;
+      });
+    });
   });
 });
 </script>

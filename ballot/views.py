@@ -46,6 +46,8 @@ def dashboard(request):
             poll_details['end_date'] = poll.end_date
             delta = (poll.end_date - date.today()).days
             poll_details['days_left_ratio'] = (total - delta) * 1.0 / total
+            if poll_details['days_left_ratio'] == 0:
+                poll_details['days_left_ratio'] = 0.5
             poll_details['days_left'] = delta
         poll_details['latest'] = ''
         latest = Voting.objects.filter(poll_option__poll=poll).order_by('-created_at').first()
@@ -132,7 +134,7 @@ def voting_result_json(request, poll_id):
     chart_data = {
         'title': poll.title,
         'data': PollResult.objects.filter(poll=poll).first().result,
-    }    
+    }
     return JsonResponse(chart_data)
 
 
