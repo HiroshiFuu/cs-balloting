@@ -25,9 +25,10 @@ class LogMixin(models.Model):
 
 class Poll(LogMixin):
     title = models.CharField(max_length=255)
+    end_date = models.DateField(null=True, verbose_name='End Date')
 
     def __str__(self):
-        return '{}'.format(self.title)
+        return '{} {}'.format(self.title, self.end_date)
 
 
 class PollOption(LogMixin):
@@ -38,6 +39,7 @@ class PollOption(LogMixin):
         managed = True
         verbose_name = 'Poll Option'
         verbose_name_plural = 'Poll Options'
+        unique_together = ('text', 'poll')
 
     def __str__(self):
         return '{}: {}'.format(self.poll, self.text)

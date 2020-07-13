@@ -19,9 +19,10 @@ class PollOptionInline(admin.StackedInline):
 class PollAdmin(admin.ModelAdmin):
     list_display = [
         'title',
+        'end_date',
     ]
     search_fields = ['title', ]
-    ordering = ['created_at']
+    ordering = ['-created_at']
     inlines = [
         PollOptionInline
     ]
@@ -30,17 +31,25 @@ class PollAdmin(admin.ModelAdmin):
 @admin.register(PollOption)
 class PollOptionAdmin(admin.ModelAdmin):
     list_display = [
+        'get_poll_title',
         'text',
     ]
-    search_fields = ['text', ]
+    search_fields = ['get_poll_title', 'text']
     ordering = ['created_at']
+    list_display_links = ('get_poll_title', 'text')
+
+    def get_poll_title(self, obj):
+        return obj.poll.title
+    get_poll_title.short_description = 'Title'
+    get_poll_title.admin_order_field = 'poll__title'
 
 
 @admin.register(Voting)
 class VotingAdmin(admin.ModelAdmin):
     list_display = [
         'user',
-        'poll_option'
+        'poll_option',
+        'created_at',
     ]
     search_fields = ['user__username', 'poll_option__text', 'poll_option__poll_title']
     ordering = ['created_at']
@@ -50,7 +59,7 @@ class VotingAdmin(admin.ModelAdmin):
 class PollResultAdmin(admin.ModelAdmin):
     list_display = [
         'poll',
-        'result'
+        'result',
     ]
     search_fields = ['poll_title', ]
     ordering = ['created_at']
