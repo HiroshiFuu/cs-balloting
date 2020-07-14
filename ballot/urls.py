@@ -9,7 +9,7 @@ urlpatterns = [
     # Matches any html file 
     re_path(r'^.*\.html', views.pages, name='pages'),
 
-    path('', views.dashboard, name='dashboard'),
+    path('home/', views.dashboard, name='home'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('voting_result_json/<int:poll_id>/', views.voting_result_json, name='voting_result_json'),
     path('polls/', views.polls, name='polls'),
