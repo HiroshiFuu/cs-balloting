@@ -127,11 +127,11 @@ def vote_done(request, poll_id, poll_option_id):
     poll = get_object_or_404(Poll, pk=poll_id)
     poll_option = get_object_or_404(PollOption, pk=poll_option_id)
     context = {
-        'Poll': poll.title,
-        'PollOption': poll_option.text,
+        'Title': poll.title,
+        'Option': poll_option.text,
     }
     compute_voting_result(poll)
-    return JsonResponse(context)
+    return render(request, 'vote_done.html', context)
 
 
 @login_required(login_url='/login/')
