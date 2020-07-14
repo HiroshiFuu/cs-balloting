@@ -1,6 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template import loader
 from django.urls import reverse
@@ -21,54 +22,75 @@ from collections import defaultdict
 from datetime import date
 
 
+@staff_member_required
 @login_required(login_url='/login/')
-def index(request):
-    return render(request, 'index.html')
+def pages(request):
+    context = {}
+    try:
+        load_template = request.path.split('/')[-1]
+        html_template = loader.get_template(load_template)
+        return HttpResponse(html_template.render(context, request))
+    except template.TemplateDoesNotExist:
+        html_template = loader.get_template('error-404.html')
+        return HttpResponse(html_template.render(context, request))
+    except:    
+        html_template = loader.get_template('error-500.html')
+        return HttpResponse(html_template.render(context, request))
 
 
 @login_required(login_url='/login/')
 def dashboard(request):
-    polls = Poll.objects.all()
-    polls_details = []
-    count_users = len(User.objects.filter(is_staff=False, is_active=True))
-    for poll in polls:
-        poll_details = {}
-        poll_details['id'] = poll.id
-        poll_details['title'] = poll.title
-        poll_details['created_at'] = poll.created_at
-        count_votes = len(Voting.objects.filter(poll_option__poll=poll))
-        poll_details['complete_rate'] = count_votes * 1.0 / count_users
-        poll_details['complete'] = poll_details['complete_rate'] * 100
-        poll_details['end_date'] = 'Unlimited'
-        poll_details['days_left'] = 0
-        if poll.end_date is not None:
-            total = (poll.end_date - poll.created_at.date()).days
-            poll_details['end_date'] = poll.end_date
-            delta = (poll.end_date - date.today()).days
-            poll_details['days_left_ratio'] = (total - delta) * 1.0 / total
-            if poll_details['days_left_ratio'] == 0:
-                poll_details['days_left_ratio'] = 0.5
-            poll_details['days_left'] = delta
-        poll_details['latest'] = ''
-        latest = Voting.objects.filter(poll_option__poll=poll).order_by('-created_at').first()
-        if latest is not None:
-            poll_details['latest'] = latest.created_at
-        polls_details.append(poll_details)
-    # print(polls_details)
-    poll_chart = polls.first()
-    chart_data = {
-        'title': poll_chart.title,
-        'data': PollResult.objects.filter(poll=poll_chart).first().result,
-    }
-    # print(chart_data)
-    votings = Voting.objects.all()
-    return render(request, 'dashboard.html', {'polls_details': polls_details, 'chart_data': chart_data, 'votings': votings})
+    if request.user.is_staff:
+        polls = Poll.objects.all()
+        polls_details = []
+        count_users = len(User.objects.filter(is_staff=False, is_active=True))
+        for poll in polls:
+            poll_details = {}
+            poll_details['id'] = poll.id
+            poll_details['title'] = poll.title
+            poll_details['created_at'] = poll.created_at
+            count_votes = len(Voting.objects.filter(poll_option__poll=poll))
+            poll_details['complete_rate'] = count_votes * 1.0 / count_users
+            poll_details['complete'] = poll_details['complete_rate'] * 100
+            poll_details['end_date'] = 'Unlimited'
+            poll_details['days_left'] = 0
+            if poll.end_date is not None:
+                total = (poll.end_date - poll.created_at.date()).days
+                poll_details['end_date'] = poll.end_date
+                delta = (poll.end_date - date.today()).days
+                poll_details['days_left_ratio'] = (total - delta) * 100.0 / total
+                poll_details['days_left_color'] = 'bg-blue'
+                if poll_details['days_left_ratio'] < 70:
+                    poll_details['days_left_color'] = 'bg-green'
+                elif poll_details['days_left_ratio'] < 85:
+                    poll_details['days_left_color'] = 'bg-yellow'
+                else:
+                    poll_details['days_left_color'] = 'bg-red'
+                if poll_details['days_left_ratio'] == 0:
+                    poll_details['days_left_ratio'] = 0.5
+                poll_details['days_left'] = delta
+            poll_details['latest'] = ''
+            latest = Voting.objects.filter(poll_option__poll=poll).order_by('-created_at').first()
+            if latest is not None:
+                poll_details['latest'] = latest.created_at
+            polls_details.append(poll_details)
+        # print(polls_details)
+        poll_chart = polls.first()
+        chart_data = {
+            'title': poll_chart.title,
+            'data': PollResult.objects.filter(poll=poll_chart).first().result,
+        }
+        # print(chart_data)
+        votings = Voting.objects.all()
+        return render(request, 'dashboard.html', {'polls_details': polls_details, 'chart_data': chart_data, 'votings': votings})
+    else:
+        return HttpResponseRedirect(reverse('ballot:polls', args=()))
 
 
 @login_required(login_url='/login/')
 def polls(request):
     polls = Poll.objects.all()
-    return render(request, 'ui-polls.html', {'polls': polls})
+    return render(request, 'polls.html', {'polls': polls})
 
 
 @login_required(login_url='/login/')
@@ -110,21 +132,6 @@ def vote_done(request, poll_id, poll_option_id):
     }
     compute_voting_result(poll)
     return JsonResponse(context)
-
-
-@login_required(login_url='/login/')
-def pages(request):
-    context = {}
-    try:
-        load_template = request.path.split('/')[-1]
-        html_template = loader.get_template(load_template)
-        return HttpResponse(html_template.render(context, request))
-    except template.TemplateDoesNotExist:
-        html_template = loader.get_template('error-404.html')
-        return HttpResponse(html_template.render(context, request))
-    except:    
-        html_template = loader.get_template('error-500.html')
-        return HttpResponse(html_template.render(context, request))
 
 
 @login_required(login_url='/login/')
