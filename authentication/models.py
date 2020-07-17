@@ -3,8 +3,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
 from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.sites.models import Site
@@ -13,35 +16,82 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.template import loader
 from django.core.mail import EmailMultiAlternatives
+from django.utils import timezone
+from django.conf import settings
 
 from core.settings.base import SITE_ID
 
 # Create your models here.
-class AdminUser(AbstractUser):
+# class AdminUser(AbstractUser):
+#     email = models.EmailField(_('email address'), unique=True, blank=False)
+
+#     class Meta:
+#         managed = True
+#         verbose_name = 'Admin User'
+#         verbose_name_plural = 'Admin Users'
+
+
+class CompanyUser(AbstractBaseUser):
+    username_validator = UnicodeUsernameValidator()
+
+    username = models.CharField(
+        _('username'),
+        max_length=63,
+        unique=False,
+        help_text=_('Required. 63 characters or fewer. Letters, digits and @/./+/-/_ only.'),
+        validators=[username_validator],
+        error_messages={
+            'unique': _("A user with that username already exists."),
+        },
+    )
+    first_name = models.CharField(_('first name'), max_length=63, blank=True)
+    last_name = models.CharField(_('last name'), max_length=63, blank=True)
+    email = models.EmailField(_('email address'))
+    is_staff = models.BooleanField(
+        _('staff status'),
+        default=False,
+        help_text=_('Designates whether the user can log into this admin site.'),
+    )
+    is_active = models.BooleanField(
+        _('active'),
+        default=True,
+        help_text=_(
+            'Designates whether this user should be treated as active. '
+            'Unselect this instead of deleting accounts.'
+        ),
+    )
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    weight = models.PositiveSmallIntegerField('Vote Weighting', null=True, blank=False)
     email = models.EmailField(_('email address'), unique=True, blank=False)
+    company = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
+
+    EMAIL_FIELD = 'email'
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
+
+    class Meta:
+        managed = True
+        verbose_name = 'Company User'
+        verbose_name_plural = 'Company Users'
 
 
-@receiver(post_save, sender=AdminUser)
+@receiver(post_save, sender=CompanyUser)
 def send_password_reset_email_when_created(sender, instance, **kwargs):
-    print(instance)
-    active_users = get_user_model()._default_manager.filter(
-        email__iexact=instance.email, is_active=True)
-    for user in (u for u in active_users if u.has_usable_password()):
-        current_site = Site.objects.get(id=SITE_ID)
-        site_name = current_site.name
-        domain = current_site.domain
-        context = {
-            'email': user.email,
-            'domain': domain,
-            'site_name': site_name,
-            'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-            'user': user,
-            'token': default_token_generator.make_token(user),
-            'protocol': 'http',
-        }
-        subject = loader.render_to_string('registration/password_reset_subject.txt', context)
-        subject = ''.join(subject.splitlines())
-        body = loader.render_to_string('registration/password_reset_email.html', context)
-        email_message = EmailMultiAlternatives(subject, body, 'admin@abc.com', [user.email])
-        email_message.send()
-        break
+    user = CompanyUser._default_manager.get(email__iexact=instance.email, is_active=True)
+    current_site = Site.objects.get(id=SITE_ID)
+    site_name = current_site.name
+    domain = current_site.domain
+    context = {
+        'email': user.email,
+        'domain': domain,
+        'site_name': site_name,
+        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+        'user': user,
+        'token': default_token_generator.make_token(user),
+        'protocol': 'http',
+    }
+    subject = loader.render_to_string('registration/password_reset_subject.txt', context)
+    subject = ''.join(subject.splitlines())
+    body = loader.render_to_string('registration/password_reset_email.html', context)
+    email_message = EmailMultiAlternatives(subject, body, 'admin@abc.com', [user.email])
+    email_message.send()
