@@ -6,11 +6,30 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.forms.utils import ErrorList
 from django.http import HttpResponse
+from django.contrib.auth.views import UserModel, PasswordResetConfirmView, ValidationError, urlsafe_base64_decode
+from django.contrib.auth.hashers import check_password
 
 from .forms import LoginForm, CustomUserCreationForm
+from .models import CompanyUser
 
 
 # Create your views here.
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+
+    def get_user(self, uidb64):
+        try:
+            # urlsafe_base64_decode() decodes to bytestring
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = UserModel._default_manager.get(pk=uid)
+        except UserModel.DoesNotExist:
+            print('UserModel.DoesNotExist')
+            uid = urlsafe_base64_decode(uidb64).decode()
+            user = CompanyUser._default_manager.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, ValidationError):
+            user = None
+        return user
+
+
 def login_view(request):
     form = LoginForm(request.POST or None)
 
@@ -21,14 +40,28 @@ def login_view(request):
         if form.is_valid():
             username = form.cleaned_data.get("username")
             password = form.cleaned_data.get("password")
+            print(username, password)
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                return redirect("/home/")
-            else:    
-                msg = 'Invalid credentials'    
+                return redirect('/home/')
+            elif UserModel._default_manager.filter(username=username).first() is None:
+                print('Custom Login')
+                user = CompanyUser.objects.filter(username=username).first()
+                if user is not None:
+                    pw_valid = check_password(password, user.password)
+                    if pw_valid:
+                        user = UserModel._default_manager.get(username='company_user')
+                        login(request, user)
+                        return redirect('/home/')
+                    else:
+                        msg = 'Invalid credentials'
+                else:
+                    msg = 'Invalid username'
+            else:
+                msg = 'Invalid credentials'
         else:
-            msg = 'Error validating the form'    
+            msg = 'Error validating the form'
 
     return render(request, "accounts/login.html", {"form": form, "msg" : msg})
 
