@@ -36,7 +36,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'authentication',
-    'ballot',  # Enable the inner app 
+    'ballot',  # Enable the inner app
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -163,7 +163,7 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-AUTH_USER_MODEL = 'authentication.User'
+AUTH_USER_MODEL = 'authentication.AdminUser'
 
 LOGIN_REDIRECT_URL = 'ballot:home'
 LOGOUT_REDIRECT_URL = 'ballot:home'
