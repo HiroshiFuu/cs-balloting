@@ -55,19 +55,21 @@ def dashboard(request):
             poll_details['end_date'] = 'Unlimited'
             poll_details['days_left'] = 0
             if poll.end_date is not None:
-                total = (poll.end_date - poll.created_at.date()).days
                 poll_details['end_date'] = poll.end_date
+                total = (poll.end_date - poll.created_at.date()).days
                 delta = (poll.end_date - date.today()).days
-                poll_details['days_left_ratio'] = (total - delta) * 100.0 / total
-                poll_details['days_left_color'] = 'bg-blue'
-                if poll_details['days_left_ratio'] < 70:
+                if total > 0 and delta > 0:
+                    poll_details['days_left_ratio'] = (total - delta) * 100.0 / total
+                else:
+                    poll_details['days_left_ratio'] = 0.5
+                if poll_details['days_left_ratio'] < 20:
+                    poll_details['days_left_color'] = 'bg-blue'
+                elif poll_details['days_left_ratio'] < 70:
                     poll_details['days_left_color'] = 'bg-green'
                 elif poll_details['days_left_ratio'] < 85:
                     poll_details['days_left_color'] = 'bg-yellow'
                 else:
-                    poll_details['days_left_color'] = 'bg-red'
-                if poll_details['days_left_ratio'] == 0:
-                    poll_details['days_left_ratio'] = 0.5
+                    poll_details['days_left_color'] = 'bg-red'                
                 poll_details['days_left'] = delta
             poll_details['latest'] = ''
             latest = Voting.objects.filter(poll_option__poll=poll).order_by('-created_at').first()
