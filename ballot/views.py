@@ -46,10 +46,10 @@ def pages(request):
 
 @login_required(login_url='/login/')
 def dashboard(request):
-    if request.user.is_staff:
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
         surveys = Survey.objects.all()
         surveys_details = []
-        count_users = len(AUTH_USER_MODEL.objects.filter(user_type=USER_TYPE_COMPANY, is_active=True))
+        count_users = len(AUTH_USER_MODEL.objects.filter(user_type=USER_TYPE_COMPANY, is_staff=True, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id

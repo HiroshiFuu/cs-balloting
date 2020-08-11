@@ -3,6 +3,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import Group
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -23,6 +24,7 @@ from django.conf import settings
 from core.settings.base import SITE_ID
 
 from .constants import USER_TYPES
+from .constants import USER_TYPE_USER
 
 
 class AuthUser(AbstractUser):
@@ -39,7 +41,7 @@ class AuthUser(AbstractUser):
         verbose_name_plural = 'Users'
 
     def __str__(self):
-        return '{}: {} {}'.format(self.username, self.user_type, self.company_user)
+        return '{}: {}'.format(self.username, self.user_type)
 
 
 # class CompanyUser(AbstractBaseUser):
@@ -84,6 +86,14 @@ class AuthUser(AbstractUser):
 #         managed = True
 #         verbose_name = 'Company User'
 #         verbose_name_plural = 'Company Users'
+
+
+@receiver(post_save, sender=AuthUser)
+def set_group_when_created_company_user(sender, instance, created, *args, **kwargs):
+    if instance.is_staff:
+        company_group = Group.objects.get(name='CompanyUserGroup') 
+        company_group.user_set.add(instance)
+        print('set_group_when_created_company_user', company_group, company_group.user_set.all())
 
 
 @receiver(post_save, sender=AuthUser)

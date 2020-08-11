@@ -1,17 +1,13 @@
 # -*- encoding: utf-8 -*-
 
-from django.shortcuts import render
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
-from django.forms.utils import ErrorList
 from django.http import HttpResponse
+from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import UserModel, PasswordResetConfirmView, ValidationError, urlsafe_base64_decode
-from django.contrib.auth.hashers import check_password
+from django.conf import settings
 
 from .forms import LoginForm
 from .forms import CustomUserCreationForm
-from .models import CustomUser
 
 
 # Create your views here.
@@ -25,7 +21,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         except UserModel.DoesNotExist:
             print('UserModel.DoesNotExist')
             uid = urlsafe_base64_decode(uidb64).decode()
-            user = CustomUser._default_manager.get(pk=uid)
+            user = settings.AUTH_USER_MODEL._default_manager.get(pk=uid)
         except (TypeError, ValueError, OverflowError, ValidationError):
             user = None
         return user
@@ -40,7 +36,7 @@ def login_view(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             if '@' in username:
-                user = CustomUser._default_manager.filter(email=username).first()
+                user = settings.AUTH_USER_MODEL._default_manager.filter(email=username).first()
                 if user is not None:
                     username = user.username
                 else:

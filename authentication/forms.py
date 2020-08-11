@@ -6,8 +6,11 @@ from django.contrib.auth.forms import UserCreationForm
 from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
 
-from .models import CustomUser
+from .models import AuthUser
+
+from .constants import USER_TYPES
 from .constants import USER_TYPE_COMPANY
+from .constants import USER_TYPE_USER
 
 
 class LoginForm(forms.Form):
@@ -28,29 +31,27 @@ class LoginForm(forms.Form):
 
 
 def gen_random_password():
-    return CustomUser.objects.make_random_password() + '!2Wq'
+    return AuthUser.objects.make_random_password() + '!2Wq'
 
 
-class CustomUserCreationForm(UserCreationForm):
+class CustomCompanyCreationForm(UserCreationForm):
     error_messages = {
         'password_mismatch': _('The two password fields didn’t match.'),
     }
-    random_password = CustomUser.objects.make_random_password()
-
-    username = forms.CharField(
-        widget=forms.TextInput(
-            attrs={
-                'placeholder': 'Username',
-                'class': 'form-control'
-            }
-        ))
+    random_password = gen_random_password()
     email = forms.EmailField(
         widget=forms.EmailInput(
             attrs={
-                'placeholder': 'Email',
+                'placeholder': '',
                 'class': 'form-control'
             }
-        ))
+        ),
+        required=True
+    )
+    company_user = forms.ModelChoiceField(
+        queryset=AuthUser.objects.all().filter(user_type=USER_TYPE_COMPANY, is_staff=True, is_active=True),
+        required=False
+    )
     password1 = forms.CharField(
         label=_("Password"),
         strip=False,
@@ -73,20 +74,69 @@ class CustomUserCreationForm(UserCreationForm):
         help_text=_("Enter the same password as before, for verification."),
         initial=random_password,
     )
-    weight = forms.IntegerField(
-        widget=forms.NumberInput(
-            attrs={
-                'placeholder': 'Vote Weighting',
-                'class': 'form-control'
-            }
-        ),
-        required=False
-    )
-    company_user = forms.ModelChoiceField(
-        queryset=CustomUser.objects.all().filter(user_type=USER_TYPE_COMPANY),
-        required=False
+    is_staff = forms.BooleanField(
+        label='Is Company User',
+        initial=True,
+        required=False,
     )
 
     class Meta:
-        model = CustomUser
-        fields = ('username', 'email', 'weight', 'company_user', 'password1', 'password2')
+        model = AuthUser
+        fields = '__all__'
+
+
+class CustomUserCreationForm(UserCreationForm):
+    error_messages = {
+        'password_mismatch': _('The two password fields didn’t match.'),
+    }
+    random_password = gen_random_password()
+
+    email = forms.EmailField(
+        widget=forms.EmailInput(
+            attrs={
+                'placeholder': '',
+                'class': 'form-control'
+            }
+        ),
+        required=True
+    )
+    weight = forms.IntegerField(
+        required=True
+    )
+    # user_type = forms.ChoiceField(
+    #     choices=USER_TYPES,
+    #     initial=USER_TYPE_USER,
+    #     required=True,
+    #     disabled=True
+    # )
+    # company_user = forms.ModelChoiceField(
+    #     queryset=AuthUser.objects.all().filter(user_type=USER_TYPE_COMPANY, is_staff=True, is_active=True),
+    #     required=True,
+    #     disabled=True
+    # )
+    password1 = forms.CharField(
+        label=_("Password"),
+        strip=False,
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Password',
+            'autocomplete': 'new-password',
+            'class': 'form-control'},
+            render_value=True),
+        help_text=password_validation.password_validators_help_text_html(),
+        initial=random_password,
+    )
+    password2 = forms.CharField(
+        label=_("Password Confirmation"),
+        widget=forms.PasswordInput(attrs={
+            'placeholder': 'Password Confirmation',
+            'autocomplete': 'new-password',
+            'class': 'form-control'},
+            render_value=True),
+        strip=False,
+        help_text=_("Enter the same password as before, for verification."),
+        initial=random_password,
+    )
+
+    class Meta:
+        model = AuthUser
+        fields = ('password1', 'password2')

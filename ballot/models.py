@@ -7,8 +7,6 @@ from django.utils.translation import gettext as _
 
 from jsonfield import JSONField
 
-from authentication.models import CustomUser
-
 
 class LogMixin(models.Model):
     class Meta:
@@ -29,7 +27,7 @@ class LogMixin(models.Model):
 class Survey(LogMixin):
     title = models.CharField(max_length=255)
     end_date = models.DateField(null=True, verbose_name='End Date')
-    company_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    company_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     class Meta:
         managed = True
