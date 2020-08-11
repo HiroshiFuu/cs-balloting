@@ -7,6 +7,8 @@ from django.utils.translation import gettext as _
 
 from jsonfield import JSONField
 
+from authentication.models import CustomUser
+
 
 class LogMixin(models.Model):
     class Meta:
@@ -27,19 +29,20 @@ class LogMixin(models.Model):
 class Survey(LogMixin):
     title = models.CharField(max_length=255)
     end_date = models.DateField(null=True, verbose_name='End Date')
+    company_user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
 
     class Meta:
         managed = True
-        verbose_name = 'Survey'
         verbose_name_plural = 'Surveys'
 
     def __str__(self):
-        return '{} {}'.format(self.title, self.end_date)
+        return '{}: {} {}'.format(self.company_user.username, self.title, self.end_date)
 
 
 class SurveyOption(LogMixin):
     text = models.CharField(max_length=255)
-    survey = models.ForeignKey(Survey, related_name='options', on_delete=models.CASCADE)
+    survey = models.ForeignKey(
+        Survey, related_name='options', on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -51,9 +54,16 @@ class SurveyOption(LogMixin):
         return '{}: {}'.format(self.survey, self.text)
 
 
-class Voting(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    survey_option = models.ForeignKey(SurveyOption, related_name='votes', on_delete=models.CASCADE)
+class SurveyVote(LogMixin):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
+    survey_option = models.ForeignKey(
+        SurveyOption, related_name='votes', on_delete=models.CASCADE)
+
+    class Meta:
+        managed = True
+        verbose_name = 'Survey Vote'
+        verbose_name_plural = 'Survey Votes'
 
     def __str__(self):
         return '{}: {} {}'.format(self.user, self.survey_option.survey, self.survey_option.text)

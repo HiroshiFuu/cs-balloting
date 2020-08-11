@@ -2,8 +2,9 @@
 
 from django.contrib import admin
 
-from .models import Survey, SurveyOption
-from .models import Voting
+from .models import Survey
+from .models import SurveyOption
+from .models import SurveyVote
 from .models import SurveyResult
 
 from django.conf.locale.en import formats as en_formats
@@ -44,8 +45,8 @@ class SurveyOptionAdmin(admin.ModelAdmin):
     get_survey_title.admin_order_field = 'survey__title'
 
 
-@admin.register(Voting)
-class VotingAdmin(admin.ModelAdmin):
+@admin.register(SurveyVote)
+class SurveyVoteAdmin(admin.ModelAdmin):
     list_display = [
         'user',
         'survey_option',

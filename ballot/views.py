@@ -9,17 +9,23 @@ from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django import template
+from django.conf import settings
 
-from .models import Survey, SurveyOption
-from .models import Voting
+from .models import Survey
+from .models import SurveyOption
+from .models import SurveyVote
 from .models import SurveyResult
-from authentication.models import User
+
+from authentication.constants import USER_TYPE_COMPANY
 
 from django.db.models import Count
 from django.db.models import Sum
 
 from collections import defaultdict
 from datetime import date
+
+
+AUTH_USER_MODEL = settings.AUTH_USER_MODEL
 
 
 @staff_member_required
@@ -43,13 +49,13 @@ def dashboard(request):
     if request.user.is_staff:
         surveys = Survey.objects.all()
         surveys_details = []
-        count_users = len(User.objects.filter(is_staff=False, is_active=True))
+        count_users = len(AUTH_USER_MODEL.objects.filter(user_type=USER_TYPE_COMPANY, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id
             survey_details['title'] = survey.title
             survey_details['created_at'] = survey.created_at
-            count_votes = len(Voting.objects.filter(
+            count_votes = len(SurveyVote.objects.filter(
                 survey_option__survey=survey))
             survey_details['complete_rate'] = count_votes * 1.0 / count_users
             survey_details['complete'] = survey_details['complete_rate'] * 100
@@ -74,7 +80,7 @@ def dashboard(request):
                     survey_details['days_left_color'] = 'bg-red'
                 survey_details['days_left'] = delta
             survey_details['latest'] = ''
-            latest = Voting.objects.filter(
+            latest = SurveyVote.objects.filter(
                 survey_option__survey=survey).order_by('-created_at').first()
             if latest is not None:
                 survey_details['latest'] = latest.created_at
@@ -86,7 +92,7 @@ def dashboard(request):
             'data': SurveyResult.objects.filter(survey=survey_chart).first().result,
         }
         # print(chart_data)
-        votings = Voting.objects.all()
+        votings = SurveyVote.objects.all()
         return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'chart_data': chart_data, 'votings': votings})
     else:
         return HttpResponseRedirect(reverse('ballot:surveys', args=()))
@@ -94,18 +100,18 @@ def dashboard(request):
 
 @login_required(login_url='/login/')
 def surveys(request):
-    surveys = Survey.objects.all()
-    return render(request, 'surveys.html', {'surveys': surveys})
+    surveys = Survey.objects.all().filter(company_user=request.user)
+    return render(request, 'survey_list.html', {'surveys': surveys})
 
 
 @login_required(login_url='/login/')
 def survey(request, survey_id):
     survey = get_object_or_404(Survey, pk=survey_id)
-    vote = Voting.objects.filter(
+    vote = SurveyVote.objects.filter(
         user=request.user, survey_option__survey=survey).first()
     if vote is not None:
         return HttpResponseRedirect(reverse('ballot:vote_done', args=(survey.id, vote.survey_option.id)))
-    return render(request, 'ballot.html', {'survey': survey})
+    return render(request, 'survey.html', {'survey': survey})
 
 
 @login_required(login_url='/login/')
@@ -116,7 +122,7 @@ def vote(request, survey_id):
         survey_option = survey.options.get(pk=request.POST['survey_option'])
         # print(survey_option)
         # print(request.user.weight)
-        vote, created = Voting.objects.get_or_create(
+        vote, created = SurveyVote.objects.get_or_create(
             user=request.user, survey_option=survey_option)
         # print(vote, created)
         if not created:
@@ -126,7 +132,7 @@ def vote(request, survey_id):
         return HttpResponseRedirect(reverse('ballot:vote_done', args=(survey.id, survey_option.id)))
     except (KeyError, Survey.DoesNotExist, SurveyOption.DoesNotExist):
         return HttpResponseRedirect(reverse('ballot:survey', args=(survey.id,)))
-    return render(request, 'ballot.html', {'survey': survey})
+    return render(request, 'survey.html', {'survey': survey})
 
 
 @login_required(login_url='/login/')
@@ -155,7 +161,7 @@ def voting_result_json(request, survey_id):
 def compute_voting_result(survey):
     survey_result, created = SurveyResult.objects.get_or_create(survey=survey)
     # print(created, survey_result)
-    # votings = Voting.objects.filter(survey_option__survey=survey).values('survey_option__text').annotate(num_votes=Count('survey_option__id'), total_votes=Sum('user__weight'))
+    # votings = SurveyVote.objects.filter(survey_option__survey=survey).values('survey_option__text').annotate(num_votes=Count('survey_option__id'), total_votes=Sum('user__weight'))
     # print(votings)
     results = []
     # for option in survey.options.all():
@@ -166,7 +172,7 @@ def compute_voting_result(survey):
     for option in survey.options.all():
         result = {'votes': 0, 'counts': 0}
         result['option'] = option.text
-        voting = Voting.objects.filter(survey_option=option).values('survey_option__text').annotate(
+        voting = SurveyVote.objects.filter(survey_option=option).values('survey_option__text').annotate(
             num_votes=Count('survey_option__id'), total_votes=Sum('user__weight'))
         # print(voting)
         if voting.exists():
