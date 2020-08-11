@@ -1,8 +1,9 @@
-django-allauth
 Django==2.2.14
+django-allauth
 gunicorn
 whitenoise
 Werkzeug
 django-environ
+python-decouple
 jsonfield
 django-extensions
