@@ -9,8 +9,9 @@ from django.http import HttpResponse
 from django.contrib.auth.views import UserModel, PasswordResetConfirmView, ValidationError, urlsafe_base64_decode
 from django.contrib.auth.hashers import check_password
 
-from .forms import LoginForm, CustomUserCreationForm
-from .models import CompanyUser
+from .forms import LoginForm
+from .forms import CustomUserCreationForm
+from .models import CustomUser
 
 
 # Create your views here.
@@ -24,7 +25,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         except UserModel.DoesNotExist:
             print('UserModel.DoesNotExist')
             uid = urlsafe_base64_decode(uidb64).decode()
-            user = CompanyUser._default_manager.get(pk=uid)
+            user = CustomUser._default_manager.get(pk=uid)
         except (TypeError, ValueError, OverflowError, ValidationError):
             user = None
         return user
@@ -32,38 +33,28 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 def login_view(request):
     form = LoginForm(request.POST or None)
-
     msg = None
 
-    if request.method == "POST":
-
+    if request.method == 'POST':
         if form.is_valid():
-            username = form.cleaned_data.get("username")
-            password = form.cleaned_data.get("password")
-            print(username, password)
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-                return redirect('/home/')
-            elif UserModel._default_manager.filter(username=username).first() is None:
-                print('Custom Login')
-                user = CompanyUser.objects.filter(username=username).first()
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            if '@' in username:
+                user = CustomUser._default_manager.filter(email=username).first()
                 if user is not None:
-                    pw_valid = check_password(password, user.password)
-                    if pw_valid:
-                        user = UserModel._default_manager.get(username='company_user')
-                        login(request, user)
-                        return redirect('/home/')
-                    else:
-                        msg = 'Invalid credentials'
+                    username = user.username
                 else:
-                    msg = 'Invalid username'
-            else:
-                msg = 'Invalid credentials'
+                    msg = 'Email address not found'
+            if msg is None:
+                user = authenticate(request, username=username, password=password)
+                if user is not None:
+                    login(request, user)
+                    return redirect('/home/')
+                else:
+                    msg = 'Invalid credentials'
         else:
             msg = 'Error validating the form'
-
-    return render(request, "accounts/login.html", {"form": form, "msg" : msg})
+    return render(request, 'accounts/login.html', {'form': form, 'msg' : msg})
 
 
 def register_user(request):
