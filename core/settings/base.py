@@ -163,7 +163,7 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
-AUTH_USER_MODEL = 'authentication.CustomUser'
+AUTH_USER_MODEL = 'authentication.AuthUser'
 
 LOGIN_REDIRECT_URL = 'ballot:home'
 LOGOUT_REDIRECT_URL = 'ballot:home'

@@ -25,7 +25,7 @@ from core.settings.base import SITE_ID
 from .constants import USER_TYPES
 
 
-class CustomUser(AbstractUser):
+class AuthUser(AbstractUser):
     weight = models.PositiveSmallIntegerField(
         'Vote Weighting', null=True, blank=True)
     user_type = models.PositiveSmallIntegerField(
@@ -86,10 +86,10 @@ class CustomUser(AbstractUser):
 #         verbose_name_plural = 'Company Users'
 
 
-@receiver(post_save, sender=CustomUser)
+@receiver(post_save, sender=AuthUser)
 def send_password_reset_email_when_created(sender, instance, created, *args, **kwargs):
-    if created:
-        user = CustomUser._default_manager.get(
+    if created and not instance.is_superuser:
+        user = AuthUser._default_manager.get(
             email__iexact=instance.email, is_active=True)
         current_site = Site.objects.get(id=SITE_ID)
         site_name = current_site.name
