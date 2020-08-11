@@ -2,21 +2,21 @@
 
 from django.contrib import admin
 
-from .models import Poll, PollOption
+from .models import Survey, SurveyOption
 from .models import Voting
-from .models import PollResult
+from .models import SurveyResult
 
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
 
 # Register your models here.
-class PollOptionInline(admin.StackedInline):
-    model = PollOption
+class SurveyOptionInline(admin.StackedInline):
+    model = SurveyOption
     extra = 0
 
 
-@admin.register(Poll)
-class PollAdmin(admin.ModelAdmin):
+@admin.register(Survey)
+class SurveyAdmin(admin.ModelAdmin):
     list_display = [
         'title',
         'end_date',
@@ -24,42 +24,42 @@ class PollAdmin(admin.ModelAdmin):
     search_fields = ['title', ]
     ordering = ['-created_at']
     inlines = [
-        PollOptionInline
+        SurveyOptionInline
     ]
 
 
-@admin.register(PollOption)
-class PollOptionAdmin(admin.ModelAdmin):
+@admin.register(SurveyOption)
+class SurveyOptionAdmin(admin.ModelAdmin):
     list_display = [
-        'get_poll_title',
+        'get_survey_title',
         'text',
     ]
-    search_fields = ['get_poll_title', 'text']
+    search_fields = ['get_survey_title', 'text']
     ordering = ['created_at']
-    list_display_links = ('get_poll_title', 'text')
+    list_display_links = ('get_survey_title', 'text')
 
-    def get_poll_title(self, obj):
-        return obj.poll.title
-    get_poll_title.short_description = 'Title'
-    get_poll_title.admin_order_field = 'poll__title'
+    def get_survey_title(self, obj):
+        return obj.survey.title
+    get_survey_title.short_description = 'Title'
+    get_survey_title.admin_order_field = 'survey__title'
 
 
 @admin.register(Voting)
 class VotingAdmin(admin.ModelAdmin):
     list_display = [
         'user',
-        'poll_option',
+        'survey_option',
         'created_at',
     ]
-    search_fields = ['user__username', 'poll_option__text', 'poll_option__poll_title']
+    search_fields = ['user__username', 'survey_option__text', 'survey_option__survey_title']
     ordering = ['created_at']
 
 
-@admin.register(PollResult)
-class PollResultAdmin(admin.ModelAdmin):
+@admin.register(SurveyResult)
+class SurveyResultAdmin(admin.ModelAdmin):
     list_display = [
-        'poll',
+        'survey',
         'result',
     ]
-    search_fields = ['poll_title', ]
+    search_fields = ['survey_title', ]
     ordering = ['created_at']

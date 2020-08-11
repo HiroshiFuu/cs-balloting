@@ -23,7 +23,7 @@
             <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
               <thead>
                 <tr>
-                  <th>Poll</th>
+                  <th>Survey</th>
                   <th class="text-center">Completion Rate</th>
                   <th>Days Left</th>
                   <th>Activity</th>
@@ -80,7 +80,7 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 id="stats_title" class="card-title">Poll Stats - {{ chart_data.title }}</h3>
+            <h3 id="stats_title" class="card-title">Survey Stats - {{ chart_data.title }}</h3>
           </div>
           <div class="row">
             <div id="chartdiv_vote" class="amCharts col-6"></div>
@@ -99,8 +99,8 @@
                 <tr>
                   <th class="w-1">No.</th>
                   <th>User</th>
-                  <th>Poll</th>
-                  <th>Poll Option</th>
+                  <th>Survey</th>
+                  <th>Survey Option</th>
                   <th>Voted At</th>
                   <th>Weight</th>
                 </tr>
@@ -163,7 +163,7 @@ require(["jquery"], function() {
       success: function (response) {
         // on successfull creating object
         console.log("update_poll_stats", response);
-        $("#stats_title").text("Poll Stats - " + response.title);
+        $("#stats_title").text("Survey Stats - " + response.title);
         populate_stat_charts(response.data);
       },
       error: function (response) {

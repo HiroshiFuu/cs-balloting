@@ -7,7 +7,7 @@ from django.utils.translation import gettext as _
 
 from jsonfield import JSONField
 
-# Create your models here.
+
 class LogMixin(models.Model):
     class Meta:
         abstract = True
@@ -24,44 +24,49 @@ class LogMixin(models.Model):
         return super().save(*args, **kwargs)
 
 
-class Poll(LogMixin):
+class Survey(LogMixin):
     title = models.CharField(max_length=255)
     end_date = models.DateField(null=True, verbose_name='End Date')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Survey'
+        verbose_name_plural = 'Surveys'
 
     def __str__(self):
         return '{} {}'.format(self.title, self.end_date)
 
 
-class PollOption(LogMixin):
+class SurveyOption(LogMixin):
     text = models.CharField(max_length=255)
-    poll = models.ForeignKey(Poll, related_name='options', on_delete=models.CASCADE)
+    survey = models.ForeignKey(Survey, related_name='options', on_delete=models.CASCADE)
 
     class Meta:
         managed = True
-        verbose_name = 'Poll Option'
-        verbose_name_plural = 'Poll Options'
-        unique_together = ('text', 'poll')
+        verbose_name = 'Survey Option'
+        verbose_name_plural = 'Survey Options'
+        unique_together = ('text', 'survey')
 
     def __str__(self):
-        return '{}: {}'.format(self.poll, self.text)
+        return '{}: {}'.format(self.survey, self.text)
 
 
 class Voting(LogMixin):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    poll_option = models.ForeignKey(PollOption, related_name='votes', on_delete=models.CASCADE)
+    survey_option = models.ForeignKey(SurveyOption, related_name='votes', on_delete=models.CASCADE)
 
     def __str__(self):
-        return '{}: {} {}'.format(self.user, self.poll_option.poll, self.poll_option.text)
+        return '{}: {} {}'.format(self.user, self.survey_option.survey, self.survey_option.text)
 
 
-class PollResult(LogMixin):
-    poll = models.OneToOneField(Poll, on_delete=models.CASCADE)
+class SurveyResult(LogMixin):
+    survey = models.OneToOneField(Survey, on_delete=models.CASCADE)
     result = JSONField(blank=True, null=True)
 
     class Meta:
         managed = True
-        verbose_name = 'Poll Result'
-        verbose_name_plural = 'Poll Results'
+        verbose_name = 'Survey Result'
+        verbose_name_plural = 'Survey Results'
 
     def __str__(self):
-        return '{}: {}'.format(self.poll, self.result)
+        return '{}: {}'.format(self.survey, self.result)

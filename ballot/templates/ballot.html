@@ -94,7 +94,7 @@
               </div>
               <div class="col-md-6 col-lg-4">
                 <div class="form-group">
-                  <label class="form-label">Poll Options</label>
+                  <label class="form-label">Survey Options</label>
                   <div id="poll_options" class="selectgroup selectgroup-pills">
                     {% for option in poll.options.all %}
                     <label class="selectgroup-item">
@@ -122,10 +122,10 @@
 <script type="text/javascript">
   require(['jquery'], function () {
     $(".nav-link").removeClass("active");
-    $(".nav-link.polls").addClass("active");
+    $(".nav-link.surveys").addClass("active");
 
-    $('#poll_options').change(function() {
-      if ($("#poll_options input[name='poll_option']:checked").val() !== null)
+    $('#survey_options').change(function() {
+      if ($("#survey_options input[name='survey_option']:checked").val() !== null)
         $("#btnSubmit").removeAttr("disabled");
     });
   });
