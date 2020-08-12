@@ -53,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'core.middleware.CurrentUserMiddleware',
 ]
 
 AUTHENTICATION_BACKENDS = [
@@ -194,7 +195,7 @@ SUIT_CONFIG = {
     'MENU_OPEN_FIRST_CHILD': False, # Default True
     # 'MENU_EXCLUDE': ('auth.group', 'auth'),
     'MENU': (
-        {'app': 'authentication', 'label': 'Authentication and Authentication', 'icon':'icon-lock', 'models': ('authuser', 'authgroup')},
+        {'app': 'authentication', 'label': 'Authentication and Authentication', 'icon':'icon-lock', 'models': ('authuser', 'authgroup', 'company')},
         {'app': 'ballot'},
         'sites',
     ),
