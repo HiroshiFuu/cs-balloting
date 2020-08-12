@@ -52,7 +52,8 @@ def login_view(request):
             #         return redirect('/home/')
             #     else:
             #         msg = 'Invalid credentials'
-            user, msg = authenticate(request, username=username, password=password)
+            user, msg = authenticate(
+                request, username=username, password=password)
             if user is not None:
                 login(request, user)
                 return redirect('/home/')

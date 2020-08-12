@@ -34,7 +34,8 @@ class AuthUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ['username', 'email', 'weight', 'company_user']}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ['groups', 'is_staff', 'is_active', 'password']}),
+        ('Permissions', {'fields': [
+         'groups', 'is_staff', 'is_active', 'password']}),
     )
     add_fieldsets = (
         (None, {
@@ -51,7 +52,7 @@ class AuthUserAdmin(UserAdmin):
     def get_list_display(self, request):
         list_display = copy.deepcopy(self.list_display)
         if not request.user.is_superuser:
-            list_display.pop(0) 
+            list_display.pop(0)
         return list_display
 
     def get_queryset(self, request):
