@@ -28,6 +28,12 @@ class SurveyAdmin(admin.ModelAdmin):
         SurveyOptionInline
     ]
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(company_user=request.user)
+
 
 @admin.register(SurveyOption)
 class SurveyOptionAdmin(admin.ModelAdmin):
@@ -44,6 +50,12 @@ class SurveyOptionAdmin(admin.ModelAdmin):
     get_survey_title.short_description = 'Title'
     get_survey_title.admin_order_field = 'survey__title'
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(survey__company_user=request.user)
+
 
 @admin.register(SurveyVote)
 class SurveyVoteAdmin(admin.ModelAdmin):
@@ -55,6 +67,12 @@ class SurveyVoteAdmin(admin.ModelAdmin):
     search_fields = ['user__username', 'survey_option__text', 'survey_option__survey_title']
     ordering = ['created_at']
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(survey_option__survey__company_user=request.user)
+
 
 @admin.register(SurveyResult)
 class SurveyResultAdmin(admin.ModelAdmin):
@@ -64,3 +82,9 @@ class SurveyResultAdmin(admin.ModelAdmin):
     ]
     search_fields = ['survey_title', ]
     ordering = ['created_at']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(survey__company_user=request.user)
