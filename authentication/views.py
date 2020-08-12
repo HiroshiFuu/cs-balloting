@@ -4,6 +4,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.views import UserModel, PasswordResetConfirmView, ValidationError, urlsafe_base64_decode
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.conf import settings
 
 from .forms import LoginForm
@@ -35,26 +37,32 @@ def login_view(request):
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            if '@' in username:
-                user = settings.AUTH_USER_MODEL._default_manager.filter(
-                    email=username).first()
-                if user is not None:
-                    username = user.username
-                else:
-                    msg = 'Email address not found'
-            if msg is None:
-                user = authenticate(
-                    request, username=username, password=password)
-                if user is not None:
-                    login(request, user)
-                    return redirect('/home/')
-                else:
-                    msg = 'Invalid credentials'
+            # if '@' in username:
+            #     user = UserModel._default_manager.filter(
+            #         email=username).first()
+            #     if user is not None:
+            #         username = user.username
+            #     else:
+            #         msg = 'Email address not found'
+            # if msg is None:
+            #     user = authenticate(
+            #         request, username=username, password=password)
+            #     if user is not None:
+            #         login(request, user)
+            #         return redirect('/home/')
+            #     else:
+            #         msg = 'Invalid credentials'
+            user, msg = authenticate(request, username=username, password=password)
+            if user is not None:
+                login(request, user)
+                return redirect('/home/')
         else:
             msg = 'Error validating the form'
     return render(request, 'accounts/login.html', {'form': form, 'msg': msg})
 
 
+@login_required(login_url='/login/')
+@staff_member_required
 def register_user(request):
     msg = None
     success = False
