@@ -16,16 +16,15 @@ from .models import SurveyOption
 from .models import SurveyVote
 from .models import SurveyResult
 
+from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
+from authentication.constants import USER_TYPE_USER
 
 from django.db.models import Count
 from django.db.models import Sum
 
 from collections import defaultdict
 from datetime import date
-
-
-AUTH_USER_MODEL = settings.AUTH_USER_MODEL
 
 
 @staff_member_required
@@ -47,9 +46,9 @@ def pages(request):
 @login_required(login_url='/login/')
 def dashboard(request):
     if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
-        surveys = Survey.objects.all()
+        surveys = Survey.objects.all().filter(company_user=request.user)
         surveys_details = []
-        count_users = len(AUTH_USER_MODEL.objects.filter(user_type=USER_TYPE_COMPANY, is_staff=True, is_active=True))
+        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company_user=request.user, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id
@@ -87,10 +86,12 @@ def dashboard(request):
             surveys_details.append(survey_details)
         # print(surveys_details)
         survey_chart = surveys.first()
-        chart_data = {
-            'title': survey_chart.title,
-            'data': SurveyResult.objects.filter(survey=survey_chart).first().result,
-        }
+        chart_data = {}
+        if survey_chart is not None:
+            chart_data = {
+                'title': survey_chart.title,
+                'data': SurveyResult.objects.filter(survey=survey_chart).first().result,
+            }
         # print(chart_data)
         votings = SurveyVote.objects.all()
         return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'chart_data': chart_data, 'votings': votings})

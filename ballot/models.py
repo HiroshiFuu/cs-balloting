@@ -53,8 +53,7 @@ class SurveyOption(LogMixin):
 
 
 class SurveyVote(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     survey_option = models.ForeignKey(
         SurveyOption, related_name='votes', on_delete=models.CASCADE)
 
