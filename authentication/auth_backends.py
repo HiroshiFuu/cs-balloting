@@ -10,7 +10,6 @@ class AuthenticationBackend(ModelBackend):
         if '@' in username:
             try:
                 user = UserModel.objects.get(email=username)
-                # print('email', user)
             except UserModel.DoesNotExist:
                 return None, 'Email address not found'
             else:
@@ -19,10 +18,9 @@ class AuthenticationBackend(ModelBackend):
         else:
             try:
                 user = UserModel.objects.get(username=username)
-                # print('username', user)
             except UserModel.DoesNotExist:
                 return None, 'Username not found'
             else:
                 if user.check_password(password):
                     return user
-        return None, 'Invalid credentials'
+        return None

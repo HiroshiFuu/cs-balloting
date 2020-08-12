@@ -37,7 +37,7 @@ def gen_random_password():
 
 class CustomCompanyCreationForm(UserCreationForm):
     error_messages = {
-        'password_mismatch': _('The two password fields didn’t match.'),
+        "password_mismatch": _("The two password fields didn’t match."),
     }
     random_password = gen_random_password()
     email = forms.EmailField(
@@ -56,11 +56,11 @@ class CustomCompanyCreationForm(UserCreationForm):
     password1 = forms.CharField(
         label=_("Password"),
         strip=False,
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Password',
-            'autocomplete': 'new-password',
-            'class': 'form-control',
-            'autocomplete': 'off'
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Password",
+                "autocomplete": "off",
+                "class": "form-control",
             },
             render_value=True),
         help_text=password_validation.password_validators_help_text_html(),
@@ -68,10 +68,11 @@ class CustomCompanyCreationForm(UserCreationForm):
     )
     password2 = forms.CharField(
         label=_("Password Confirmation"),
-        widget=forms.PasswordInput(attrs={
-            'placeholder': 'Password Confirmation',
-            'autocomplete': 'new-password',
-            'class': 'form-control'
+        widget=forms.PasswordInput(
+            attrs={
+                "placeholder": "Password Confirmation",
+                "autocomplete": "off",
+                "class": "form-control"
             },
             render_value=True),
         strip=False,
@@ -79,7 +80,7 @@ class CustomCompanyCreationForm(UserCreationForm):
         initial=random_password,
     )
     is_staff = forms.BooleanField(
-        label='Is Company User',
+        label="Is Company User",
         initial=True,
         required=False,
     )
@@ -91,15 +92,15 @@ class CustomCompanyCreationForm(UserCreationForm):
 
 class CustomUserCreationForm(UserCreationForm):
     error_messages = {
-        'password_mismatch': _('The two password fields didn’t match.'),
+        "password_mismatch": _("The two password fields didn’t match."),
     }
     random_password = gen_random_password()
 
     email = forms.EmailField(
         widget=forms.EmailInput(
             attrs={
-                'placeholder': '',
-                'class': 'form-control'
+                "placeholder": "",
+                "class": "form-control"
             }
         ),
         required=True
@@ -122,9 +123,9 @@ class CustomUserCreationForm(UserCreationForm):
         label=_("Password"),
         strip=False,
         widget=forms.PasswordInput(attrs={
-            'placeholder': 'Password',
-            'autocomplete': 'new-password',
-            'class': 'form-control'},
+            "placeholder": "Password",
+            "autocomplete": "off",
+            "class": "form-control"},
             render_value=True),
         help_text=password_validation.password_validators_help_text_html(),
         initial=random_password,
@@ -132,9 +133,9 @@ class CustomUserCreationForm(UserCreationForm):
     password2 = forms.CharField(
         label=_("Password Confirmation"),
         widget=forms.PasswordInput(attrs={
-            'placeholder': 'Password Confirmation',
-            'autocomplete': 'new-password',
-            'class': 'form-control'},
+            "placeholder": "Password Confirmation",
+            "autocomplete": "off",
+            "class": "form-control"},
             render_value=True),
         strip=False,
         help_text=_("Enter the same password as before, for verification."),

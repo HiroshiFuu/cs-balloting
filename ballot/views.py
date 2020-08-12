@@ -56,7 +56,10 @@ def dashboard(request):
             survey_details['created_at'] = survey.created_at
             count_votes = len(SurveyVote.objects.filter(
                 survey_option__survey=survey))
-            survey_details['complete_rate'] = count_votes * 1.0 / count_users
+            if count_users > 0:
+                survey_details['complete_rate'] = count_votes * 1.0 / count_users
+            else:
+                survey_details['complete_rate'] = 0
             survey_details['complete'] = survey_details['complete_rate'] * 100
             survey_details['end_date'] = 'Unlimited'
             survey_details['days_left'] = 0
@@ -88,9 +91,14 @@ def dashboard(request):
         survey_chart = surveys.first()
         chart_data = {}
         if survey_chart is not None:
+            survery_result = SurveyResult.objects.filter(survey=survey_chart).first()
+            if survery_result is not None:
+                data = survery_result.result
+            else:
+                data = {}
             chart_data = {
                 'title': survey_chart.title,
-                'data': SurveyResult.objects.filter(survey=survey_chart).first().result,
+                'data': data,
             }
         # print(chart_data)
         votings = SurveyVote.objects.all()
