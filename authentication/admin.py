@@ -1,10 +1,17 @@
 # -*- encoding: utf-8 -*-
 
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.admin import GroupAdmin
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
+from django.contrib.admin import helpers, widgets
+from django.forms.widgets import CheckboxSelectMultiple, SelectMultiple
+from django.contrib.admin.widgets import (
+    AutocompleteSelect, AutocompleteSelectMultiple,
+)
 
 from .models import AuthUser
 from .models import AuthGroup
@@ -21,8 +28,19 @@ admin.site.unregister(Group)
 
 
 @admin.register(AuthGroup)
-class AuthGroupAdmin(admin.ModelAdmin):
-    list_display = ['name']
+class AuthGroupAdmin(GroupAdmin):
+    list_display = ['name', 'list_permissions']
+    # formfield_overrides = {models.ManyToManyField: {'widget': widgets.FilteredSelectMultiple('permissions', False, attrs={'size': '20'})}}
+    # filter_horizontal = []
+
+    def list_permissions(self, obj):
+        return ' | '.join([o.name for o in obj.permissions.all()])
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        form_field = super().formfield_for_manytomany(db_field, request, **kwargs)
+        if db_field.name in [*self.filter_horizontal]:
+            form_field.widget.attrs={'size': '10'}
+        return form_field
 
 
 @admin.register(AuthUser)

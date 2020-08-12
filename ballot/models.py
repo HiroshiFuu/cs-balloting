@@ -31,6 +31,7 @@ class Survey(LogMixin):
 
     class Meta:
         managed = True
+        verbose_name = 'Survey'
         verbose_name_plural = 'Surveys'
 
     def __str__(self):
