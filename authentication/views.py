@@ -21,7 +21,7 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
         except UserModel.DoesNotExist:
             print('UserModel.DoesNotExist')
             uid = urlsafe_base64_decode(uidb64).decode()
-            user = settings.AUTH_USER_MODEL._default_manager.get(pk=uid)
+            user = UserModel._default_manager.get(pk=uid)
         except (TypeError, ValueError, OverflowError, ValidationError):
             user = None
         return user
@@ -36,13 +36,15 @@ def login_view(request):
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
             if '@' in username:
-                user = settings.AUTH_USER_MODEL._default_manager.filter(email=username).first()
+                user = settings.AUTH_USER_MODEL._default_manager.filter(
+                    email=username).first()
                 if user is not None:
                     username = user.username
                 else:
                     msg = 'Email address not found'
             if msg is None:
-                user = authenticate(request, username=username, password=password)
+                user = authenticate(
+                    request, username=username, password=password)
                 if user is not None:
                     login(request, user)
                     return redirect('/home/')
@@ -50,30 +52,25 @@ def login_view(request):
                     msg = 'Invalid credentials'
         else:
             msg = 'Error validating the form'
-    return render(request, 'accounts/login.html', {'form': form, 'msg' : msg})
+    return render(request, 'accounts/login.html', {'form': form, 'msg': msg})
 
 
 def register_user(request):
-
-    msg     = None
+    msg = None
     success = False
 
-    if request.method == "POST":
+    if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            username = form.cleaned_data.get("username")
-            raw_password = form.cleaned_data.get("password1")
-            user = authenticate(username=username, password=raw_password)
-
-            msg     = 'User created.'
+            # username = form.cleaned_data.get('username')
+            # raw_password = form.cleaned_data.get('password1')
+            # user = authenticate(username=username, password=raw_password)
+            msg = 'User created.'
             success = True
-            
-            #return redirect("/login/")
-
+            # return redirect('/login/')
         else:
-            msg = 'Form is not valid'    
+            msg = 'Form is not valid'
     else:
         form = CustomUserCreationForm()
-
-    return render(request, "accounts/register.html", {"form": form, "msg" : msg, "success" : success })
+    return render(request, 'accounts/register.html', {'form': form, 'msg': msg, 'success': success})
