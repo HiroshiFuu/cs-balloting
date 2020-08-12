@@ -7,46 +7,19 @@ from django.contrib.auth.models import Group
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.mail import EmailMultiAlternatives
 from django.template import loader
 from django.contrib.sites.models import Site
-
 from django.contrib.auth.tokens import default_token_generator
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.contrib.auth.base_user import AbstractBaseUser
-
-from django.utils.translation import gettext as _
-from django.utils import timezone
-from django.conf import settings
 
 from core.settings.base import SITE_ID
+from core.models import LogMixin
 
 from .constants import USER_TYPES
 from .constants import USER_TYPE_USER
-
-from core.middleware import get_current_user
-
-
-class LogMixin(models.Model):
-    class Meta:
-        abstract = True
-
-    created_at = models.DateTimeField(
-        editable=False, auto_now_add=True, verbose_name='Created At')
-    modified_at = models.DateTimeField(
-        editable=False, blank=True, null=True, verbose_name='Modified At')
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Created By', related_name='user_created_by')
-    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Modified By', related_name='user_modified_by')
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.created_at = timezone.now()
-            self.created_by = get_current_user()
-        self.modified_at = timezone.now()
-        self.modified_by = get_current_user()
-        return super().save(*args, **kwargs)
 
 
 class Company(LogMixin):
@@ -86,50 +59,6 @@ class AuthGroup(Group):
         proxy = True
         verbose_name = 'Group'
         verbose_name_plural = 'Groups'
-
-
-# class CompanyUser(AbstractBaseUser):
-#     username_validator = UnicodeUsernameValidator()
-
-#     username = models.CharField(
-#         _('username'),
-#         max_length=63,
-#         unique=False,
-#         help_text=_('Required. 63 characters or fewer. Letters, digits and @/./+/-/_ only.'),
-#         validators=[username_validator],
-#         error_messages={
-#             'unique': _("A user with that username already exists."),
-#         },
-#     )
-#     first_name = models.CharField(_('first name'), max_length=63, blank=True)
-#     last_name = models.CharField(_('last name'), max_length=63, blank=True)
-#     email = models.EmailField(_('email address'))
-#     is_staff = models.BooleanField(
-#         _('staff status'),
-#         default=False,
-#         help_text=_('Designates whether the user can log into this admin site.'),
-#     )
-#     is_active = models.BooleanField(
-#         _('active'),
-#         default=True,
-#         help_text=_(
-#             'Designates whether this user should be treated as active. '
-#             'Unselect this instead of deleting accounts.'
-#         ),
-#     )
-#     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-#     weight = models.PositiveSmallIntegerField('Vote Weighting', null=True, blank=False)
-#     email = models.EmailField(_('email address'), unique=True, blank=False)
-#     company = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
-
-#     EMAIL_FIELD = 'email'
-#     USERNAME_FIELD = 'username'
-#     REQUIRED_FIELDS = ['email']
-
-#     class Meta:
-#         managed = True
-#         verbose_name = 'Company User'
-#         verbose_name_plural = 'Company Users'
 
 
 @receiver(post_save, sender=AuthUser)

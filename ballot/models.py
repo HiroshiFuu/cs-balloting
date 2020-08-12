@@ -1,33 +1,19 @@
 # -*- encoding: utf-8 -*-
 
 from django.db import models
-from django.utils import timezone
 from django.conf import settings
-from django.utils.translation import gettext as _
+
+from core.models import LogMixin
+
+from authentication.models import Company
 
 from jsonfield import JSONField
-
-
-class LogMixin(models.Model):
-    class Meta:
-        abstract = True
-
-    created_at = models.DateTimeField(
-        editable=False, auto_now_add=True, verbose_name='Created At')
-    modified_at = models.DateTimeField(
-        editable=False, blank=True, null=True, verbose_name='Modified At')
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.created_at = timezone.now()
-        self.modified_at = timezone.now()
-        return super().save(*args, **kwargs)
 
 
 class Survey(LogMixin):
     title = models.CharField(max_length=255)
     end_date = models.DateField(null=True, verbose_name='End Date')
-    company_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
     class Meta:
         managed = True
@@ -35,7 +21,7 @@ class Survey(LogMixin):
         verbose_name_plural = 'Surveys'
 
     def __str__(self):
-        return '{}: {} {}'.format(self.company_user.username, self.title, self.end_date)
+        return '{}: {} {}'.format(self.company, self.title, self.end_date)
 
 
 class SurveyOption(LogMixin):
