@@ -26,14 +26,51 @@ from core.settings.base import SITE_ID
 from .constants import USER_TYPES
 from .constants import USER_TYPE_USER
 
+from core.middleware import get_current_user
+
+
+class LogMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    created_at = models.DateTimeField(
+        editable=False, auto_now_add=True, verbose_name='Created At')
+    modified_at = models.DateTimeField(
+        editable=False, blank=True, null=True, verbose_name='Modified At')
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Created By', related_name='user_created_by')
+    modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True, verbose_name='Modified By', related_name='user_modified_by')
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = timezone.now()
+            self.created_by = get_current_user()
+        self.modified_at = timezone.now()
+        self.modified_by = get_current_user()
+        return super().save(*args, **kwargs)
+
+
+class Company(LogMixin):
+    name = models.CharField('Name', max_length=63)
+    address = models.CharField('Address', max_length=127)
+    postal_code = models.PositiveIntegerField('Postal Code')
+    valid_date = models.DateField('Valid Date')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Company'
+        verbose_name_plural = 'Companies'
+
+    def __str__(self):
+        return '{} {}'.format(self.name, self.valid_date)
+
 
 class AuthUser(AbstractUser):
     weight = models.PositiveSmallIntegerField(
-        'Vote Weighting', null=True, blank=True)
+        'Vote Weightage', null=True, blank=True)
     user_type = models.PositiveSmallIntegerField(
         'User Type', choices=USER_TYPES, null=True)
-    company_user = models.ForeignKey(
-        'self', on_delete=models.CASCADE, null=True, blank=True)
+    company = models.ForeignKey(
+        Company, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -41,7 +78,7 @@ class AuthUser(AbstractUser):
         verbose_name_plural = 'Users'
 
     def __str__(self):
-        return '{}: {}'.format(self.username, self.user_type)
+        return '{} {} {}'.format(self.username, self.user_type, self.company)
 
 
 class AuthGroup(Group):
@@ -98,9 +135,8 @@ class AuthGroup(Group):
 @receiver(post_save, sender=AuthUser)
 def set_group_when_created_company_user(sender, instance, created, *args, **kwargs):
     if not instance.is_superuser and instance.is_staff:
-        company_group = Group.objects.get(name='CompanyUserGroup') 
+        company_group = Group.objects.get(name='CompanyUserGroup')
         company_group.user_set.add(instance)
-        print('set_group_when_created_company_user', company_group, company_group.user_set.all())
 
 
 @receiver(post_save, sender=AuthUser)

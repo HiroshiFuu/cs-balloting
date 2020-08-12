@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from django.core.exceptions import ValidationError
 
 from .models import AuthUser
+from .models import Company
 
 from .constants import USER_TYPES
 from .constants import USER_TYPE_COMPANY
@@ -48,8 +49,8 @@ class CustomCompanyCreationForm(UserCreationForm):
         ),
         required=True
     )
-    company_user = forms.ModelChoiceField(
-        queryset=AuthUser.objects.all().filter(user_type=USER_TYPE_COMPANY, is_staff=True, is_active=True),
+    company = forms.ModelChoiceField(
+        queryset=Company.objects.all(),
         required=False
     )
     password1 = forms.CharField(
@@ -58,7 +59,9 @@ class CustomCompanyCreationForm(UserCreationForm):
         widget=forms.PasswordInput(attrs={
             'placeholder': 'Password',
             'autocomplete': 'new-password',
-            'class': 'form-control'},
+            'class': 'form-control',
+            'autocomplete': 'off'
+            },
             render_value=True),
         help_text=password_validation.password_validators_help_text_html(),
         initial=random_password,
@@ -68,7 +71,8 @@ class CustomCompanyCreationForm(UserCreationForm):
         widget=forms.PasswordInput(attrs={
             'placeholder': 'Password Confirmation',
             'autocomplete': 'new-password',
-            'class': 'form-control'},
+            'class': 'form-control'
+            },
             render_value=True),
         strip=False,
         help_text=_("Enter the same password as before, for verification."),

@@ -2,17 +2,12 @@
 
 from django.contrib import admin
 from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.admin import GroupAdmin
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
-from django.contrib.admin import helpers, widgets
-from django.forms.widgets import CheckboxSelectMultiple, SelectMultiple
-from django.contrib.admin.widgets import (
-    AutocompleteSelect, AutocompleteSelectMultiple,
-)
 
+from .models import Company
 from .models import AuthUser
 from .models import AuthGroup
 
@@ -20,6 +15,7 @@ from .forms import CustomCompanyCreationForm
 from .forms import CustomUserCreationForm
 
 from .constants import USER_TYPE_USER
+from .constants import USER_TYPE_COMPANY
 
 import copy
 
@@ -27,11 +23,19 @@ import copy
 admin.site.unregister(Group)
 
 
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = [
+        'name',
+        'address',
+        'postal_code',
+        'valid_date',
+    ]
+
+
 @admin.register(AuthGroup)
 class AuthGroupAdmin(GroupAdmin):
     list_display = ['name', 'list_permissions']
-    # formfield_overrides = {models.ManyToManyField: {'widget': widgets.FilteredSelectMultiple('permissions', False, attrs={'size': '20'})}}
-    # filter_horizontal = []
 
     def list_permissions(self, obj):
         return ' | '.join([o.name for o in obj.permissions.all()])
@@ -45,12 +49,12 @@ class AuthGroupAdmin(GroupAdmin):
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company_user', 'username', 'email',
-                    'weight', 'is_company', 'is_active']
+    list_display = ['company', 'username', 'email',
+                    'weight', 'is_company_user', 'is_active']
     ordering = ('username',)
     list_display_links = ('username', 'email')
     fieldsets = (
-        (None, {'fields': ['username', 'email', 'weight', 'company_user']}),
+        (None, {'fields': ['username', 'email', 'weight', 'company']}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': [
          'groups', 'is_staff', 'is_active', 'password']}),
@@ -58,14 +62,14 @@ class AuthUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ['username', 'email', 'weight', 'user_type', 'company_user', 'password1', 'password2', 'is_staff']}
+            'fields': ['username', 'email', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
          ),
     )
 
-    def is_company(self, obj):
-        return not obj.is_superuser and obj.is_staff
-    is_company.short_description = _('Is Company User')
-    is_company.boolean = True
+    def is_company_user(self, obj):
+        return obj.user_type == USER_TYPE_COMPANY
+    is_company_user.short_description = _('Is Company User')
+    is_company_user.boolean = True
 
     def get_list_display(self, request):
         list_display = copy.deepcopy(self.list_display)
@@ -74,34 +78,36 @@ class AuthUserAdmin(UserAdmin):
         return list_display
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        queryset = super().get_queryset(request)
         if request.user.is_superuser:
-            return qs
-        return qs.filter(Q(username=request.user.username) | Q(company_user=request.user))
+            return queryset
+        return queryset.filter(company=request.user.company)
 
     def get_fieldsets(self, request, obj=None):
         if obj:
-            fieldsets = copy.deepcopy(self.fieldsets)
-            if not request.user.is_superuser:
-                fieldsets[0][1]['fields'].pop(-1)
-                fieldsets[2][1]['fields'].pop(0)
-                fieldsets[2][1]['fields'].pop(0)
-        else:
-            fieldsets = copy.deepcopy(self.add_fieldsets)
             if request.user.is_superuser:
+                fieldsets = copy.deepcopy(self.fieldsets)
+            else:
+                fieldsets = (
+                    (None, {'fields': ['username', 'email', 'weight', 'company']}),
+                    ('Permissions', {'fields': ['is_active', 'password']}),
+                )
+        else:
+            if request.user.is_superuser:
+                fieldsets = copy.deepcopy(self.add_fieldsets)
                 self.add_form = CustomCompanyCreationForm
-            elif request.user.is_staff:
+            else:
                 self.add_form = CustomUserCreationForm
                 # fieldsets[0][1]['fields'].pop(-1)
                 fieldsets[0][1]['fields'] = ['username',
                                              'email', 'weight', 'password1', 'password2']
-        # print('get_fieldsets', self.add_form)
+        # print('get_fieldsets', fieldsets)
         return fieldsets
 
     def save_model(self, request, obj, form, change):
         # print('save_model', obj, change)
-        if not change and not request.user.is_superuser and request.user.is_staff:
-            obj.company_user = request.user
+        if not change and request.user.user_type == USER_TYPE_COMPANY:
+            obj.company = request.user.company
             obj.user_type = USER_TYPE_USER
         super().save_model(request, obj, form, change)
 

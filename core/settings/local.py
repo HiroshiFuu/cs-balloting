@@ -9,7 +9,7 @@ import os
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(PROJECT_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(PROJECT_DIR, 'local.sqlite3'),
     }
 }
 

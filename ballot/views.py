@@ -46,9 +46,9 @@ def pages(request):
 @login_required(login_url='/login/')
 def dashboard(request):
     if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
-        surveys = Survey.objects.all().filter(company_user=request.user)
+        surveys = Survey.objects.all().filter(company=request.user.company)
         surveys_details = []
-        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company_user=request.user, is_active=True))
+        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=request.user.company, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id
@@ -101,7 +101,7 @@ def dashboard(request):
 
 @login_required(login_url='/login/')
 def surveys(request):
-    surveys = Survey.objects.all().filter(company_user=request.user)
+    surveys = Survey.objects.all().filter(company=request.user.company)
     return render(request, 'survey_list.html', {'surveys': surveys})
 
 
