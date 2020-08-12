@@ -44,6 +44,13 @@ class AuthUser(AbstractUser):
         return '{}: {}'.format(self.username, self.user_type)
 
 
+class AuthGroup(Group):
+    class Meta:
+        proxy = True
+        verbose_name = 'Group'
+        verbose_name_plural = 'Groups'
+
+
 # class CompanyUser(AbstractBaseUser):
 #     username_validator = UnicodeUsernameValidator()
 
@@ -90,7 +97,7 @@ class AuthUser(AbstractUser):
 
 @receiver(post_save, sender=AuthUser)
 def set_group_when_created_company_user(sender, instance, created, *args, **kwargs):
-    if instance.is_staff:
+    if not instance.is_superuser and instance.is_staff:
         company_group = Group.objects.get(name='CompanyUserGroup') 
         company_group.user_set.add(instance)
         print('set_group_when_created_company_user', company_group, company_group.user_set.all())
