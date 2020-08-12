@@ -2,10 +2,12 @@
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import Group
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
 from .models import AuthUser
+from .models import AuthGroup
 
 from .forms import CustomCompanyCreationForm
 from .forms import CustomUserCreationForm
@@ -13,6 +15,14 @@ from .forms import CustomUserCreationForm
 from .constants import USER_TYPE_USER
 
 import copy
+
+
+admin.site.unregister(Group)
+
+
+@admin.register(AuthGroup)
+class AuthGroupAdmin(admin.ModelAdmin):
+    list_display = ['name']
 
 
 @admin.register(AuthUser)
@@ -24,7 +34,7 @@ class AuthUserAdmin(UserAdmin):
     fieldsets = (
         (None, {'fields': ['username', 'email', 'weight', 'company_user']}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
-        ('Permissions', {'fields': ['groups', 'is_active']}),
+        ('Permissions', {'fields': ['groups', 'is_staff', 'is_active', 'password']}),
     )
     add_fieldsets = (
         (None, {
@@ -55,6 +65,7 @@ class AuthUserAdmin(UserAdmin):
             fieldsets = copy.deepcopy(self.fieldsets)
             if not request.user.is_superuser:
                 fieldsets[0][1]['fields'].pop(-1)
+                fieldsets[2][1]['fields'].pop(0)
                 fieldsets[2][1]['fields'].pop(0)
         else:
             fieldsets = copy.deepcopy(self.add_fieldsets)
