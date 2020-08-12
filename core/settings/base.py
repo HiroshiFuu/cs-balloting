@@ -29,18 +29,19 @@ DJANGO_APPS = [
     'django.contrib.sites',
 ]
 
-THIRD_PARTY_APPS = [
-    # 'allauth',
-    # 'allauth.account',
-    'django_extensions',
-]
-
 LOCAL_APPS = [ # Enable the inner app
     'authentication',
     'ballot',
 ]
 
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+THIRD_PARTY_APPS = [
+    # 'allauth',
+    # 'allauth.account',
+    'django_extensions',
+    'import_export',
+]
+
+INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
 
 SITE_ID = 1
 
