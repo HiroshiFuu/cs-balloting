@@ -7,3 +7,4 @@ django-environ
 python-decouple
 jsonfield
 django-extensions
+django-import-export
