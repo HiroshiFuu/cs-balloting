@@ -64,3 +64,35 @@ class SurveyResult(LogMixin):
 
     def __str__(self):
         return '{}: {}'.format(self.survey, self.result)
+
+
+class LivePoll(LogMixin):
+    title = models.CharField(max_length=255)
+    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    is_chosen = models.BooleanField('Is Chosen', default=False)
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll'
+        verbose_name_plural = 'Live Polls'
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.company, self.title, self.is_chosen)
+
+
+class LivePollItem(LogMixin):
+    text = models.CharField(max_length=255)
+    poll = models.ForeignKey(
+        LivePoll, related_name='items', on_delete=models.CASCADE)
+    order = models.PositiveSmallIntegerField('Sequence Order', default=0)
+    is_open = models.BooleanField('Is Open', default=False)
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll Item'
+        verbose_name_plural = 'Live Poll Items'
+        unique_together = ('text', 'poll')
+        ordering = ['order']
+
+    def __str__(self):
+        return '{}: {}.{}'.format(self.poll, self.order, self.text)

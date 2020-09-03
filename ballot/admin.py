@@ -3,11 +3,14 @@
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
+from adminsortable2.admin import SortableAdminMixin
 
 from .models import Survey
 from .models import SurveyOption
 from .models import SurveyVote
 from .models import SurveyResult
+from .models import LivePoll
+from .models import LivePollItem
 
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
@@ -95,3 +98,38 @@ class SurveyResultAdmin(ImportExportModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(survey__company=request.user.company)
+
+
+@admin.register(LivePoll)
+class LivePollAdmin(ImportExportModelAdmin):
+    list_display = [
+        'title',
+        'is_chosen',
+    ]
+    search_fields = ['title', ]
+    ordering = ['-created_at']
+    exclude = ('created_by', 'modified_by')
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(company=request.user.company)
+
+
+@admin.register(LivePollItem)
+class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
+    list_display = [
+        'order',
+        'text',
+        'poll',
+    ]
+    list_display_links = ('text', )
+    search_fields = ['text', 'poll']
+    exclude = ('created_by', 'modified_by')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(poll__company=request.user.company)
