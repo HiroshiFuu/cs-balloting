@@ -8,3 +8,5 @@ python-decouple
 jsonfield
 django-extensions
 django-import-export
+django-admin-sortable2
+django-inline-actions
