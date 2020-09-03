@@ -8,15 +8,20 @@
             <a href="{% url 'ballot:dashboard' %}" class="nav-link dashboard"><i class="fa fa-tachometer"></i>Dashboard</a>
           </li>
           <li class="nav-item">
+            <a href="{% url 'ballot:live_voting' %}" class="nav-link live_voting"><i class="fe fe-check-circle"></i>Live Voting</a>
+          </li>
+          {% endif %}
+          <li class="nav-item">
+            <a href="{% url 'ballot:surveys' %}" class="nav-link surveys"><i class="fe fe-check-circle"></i>Surveys</a>
+          </li>
+          {% if request.user.is_superuser %}
+          <li class="nav-item">
             <a href="/ui-icons.html" class="nav-link"><i class="fe fe-info"></i>Icons</a>
           </li>
           <li class="nav-item">
             <a href="/ui-form-elements.html" class="nav-link"><i class="fe fe-check-square"></i>Forms</a>
           </li>
           {% endif %}
-          <li class="nav-item">
-            <a href="{% url 'ballot:surveys' %}" class="nav-link surveys"><i class="fe fe-check-circle"></i>Surveys</a>
-          </li>
           <!-- <li class="nav-item">
             <a href="/" class="nav-link active"><i class="fe fe-home"></i>Home</a>
           </li> -->

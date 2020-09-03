@@ -39,6 +39,7 @@ THIRD_PARTY_APPS = [
     # 'allauth.account',
     'django_extensions',
     'import_export',
+    'adminsortable2',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS

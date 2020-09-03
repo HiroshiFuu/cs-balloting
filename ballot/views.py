@@ -15,6 +15,8 @@ from .models import Survey
 from .models import SurveyOption
 from .models import SurveyVote
 from .models import SurveyResult
+from .models import LivePoll
+from .models import LivePollItem
 
 from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
@@ -41,6 +43,30 @@ def pages(request):
     except:
         html_template = loader.get_template('error-500.html')
         return HttpResponse(html_template.render(context, request))
+
+
+@login_required(login_url='/login/')
+def live_voting(request):
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        poll = LivePoll.objects.all().filter(company=request.user.company, is_chosen=True).first()
+        poll_details = {}
+        if poll:
+            poll_details['title'] = poll.title
+            LivePollItems = LivePollItem.objects.filter(poll=poll)
+            poll_items = []
+            for item in LivePollItems:
+                poll_item = {}
+                poll_item['id'] = item.id
+                poll_item['text'] = item.text
+                poll_items.append(poll_item)
+            poll_details['items'] = poll_items
+            print('poll_details', poll_details)
+    return render(request, 'live_voting.html', {'poll_details': poll_details})
+
+
+@login_required(login_url='/login/')
+def open_live_voting(request, poll_id):
+    return HttpResponse('OK')
 
 
 @login_required(login_url='/login/')
