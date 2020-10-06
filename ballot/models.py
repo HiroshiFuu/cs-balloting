@@ -81,11 +81,13 @@ class LivePoll(LogMixin):
 
 
 class LivePollItem(LogMixin):
-    text = models.CharField(max_length=255)
     poll = models.ForeignKey(
         LivePoll, related_name='items', on_delete=models.CASCADE)
     order = models.PositiveSmallIntegerField('Sequence Order', default=0)
+    text = models.CharField(max_length=255)
     is_open = models.BooleanField('Is Open', default=False)
+    opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
+    opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', null=True, blank=True)
 
     class Meta:
         managed = True
@@ -96,3 +98,18 @@ class LivePollItem(LogMixin):
 
     def __str__(self):
         return '{}: {}.{}'.format(self.poll, self.order, self.text)
+
+
+class LivePollItemVote(LogMixin):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    poll_item = models.ForeignKey(
+        LivePollItem, related_name='item_votes', on_delete=models.CASCADE)
+    vote_option = models.PositiveSmallIntegerField('Vote Option')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll Item Vote'
+        verbose_name_plural = 'Live Poll Item Votes'
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.poll_item, self.user, self.vote_option)

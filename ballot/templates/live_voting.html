@@ -3,7 +3,17 @@
 
 {% block styles %}
 <style>
-
+a.disabled {
+    pointer-events: none;
+    color: #ccc;
+}
+td.status {
+  font-size: 20px;
+}
+td.status > .dropdown-icon {
+  margin-left: 1rem;
+  margin-right: 0.5rem;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -30,12 +40,21 @@
                 {% for item in poll_details.items %}
                 <tr>
                   <td>
-                    <div>{{ forloop.counter }}.{{ item.text }}</div>
+                    <div>{{ forloop.counter }}. {{ item.text }}</div>
+                  </td>
+                  <td class="text-center status">
+                    <i class="dropdown-icon fa fa-smile-o"></i>{{ item.result.smile }}
+                    <i class="dropdown-icon fa fa-meh-o"></i>{{ item.result.meh }}
+                    <i class="dropdown-icon fa fa-frown-o"></i>{{ item.result.frown }}
+                    &nbsp;&nbsp;
+                    <i class="dropdown-icon fa fa-user-times"></i>{{ item.result.miss }}
                   </td>
                   <td class="text-center">
-                  </td>
-                  <td class="text-center">
-                    <a href="{% url 'ballot:open_live_voting' item.id %}" target="_blank" class="dropdown-item"><i class="dropdown-icon fe fe-edit"></i>Open Voting</a>
+                    {% if item.is_open %}
+                    <a href="{% url 'ballot:close_live_voting' item.id %}" target="_self" class="dropdown-item"><i class="dropdown-icon fe fe-disc"></i><b>Close Voting</b></a>
+                    {% else %}
+                    <a href="{% url 'ballot:open_live_voting' item.id %}" target="_self" class="dropdown-item {% if has_voting_opened %}disabled{% endif %}"><i class="dropdown-icon fe fe-check-circle"></i>Open Voting</a>
+                    {% endif %}
                   </td>
                 </tr>
                 {% endfor %}

@@ -11,6 +11,7 @@ from .models import SurveyVote
 from .models import SurveyResult
 from .models import LivePoll
 from .models import LivePollItem
+from .models import LivePollItemVote
 
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
@@ -100,11 +101,20 @@ class SurveyResultAdmin(ImportExportModelAdmin):
         return qs.filter(survey__company=request.user.company)
 
 
+class LivePollItemInline(admin.StackedInline):
+    model = LivePollItem
+    extra = 0
+    exclude = ('created_by', 'modified_by')
+
+
 @admin.register(LivePoll)
 class LivePollAdmin(ImportExportModelAdmin):
     list_display = [
         'title',
         'is_chosen',
+    ]
+    inlines = [
+        LivePollItemInline
     ]
     search_fields = ['title', ]
     ordering = ['-created_at']
@@ -121,8 +131,11 @@ class LivePollAdmin(ImportExportModelAdmin):
 class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
     list_display = [
         'order',
-        'text',
         'poll',
+        'text',
+        'is_open',
+        'opened_at',
+        'opening_duration_minustes',
     ]
     list_display_links = ('text', )
     search_fields = ['text', 'poll']
@@ -133,3 +146,22 @@ class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(poll__company=request.user.company)
+
+
+@admin.register(LivePollItemVote)
+class LivePollItemVoteAdmin(ImportExportModelAdmin):
+    list_display = [
+        'user',
+        'poll_item',
+        'vote_option',
+        'created_at',
+    ]
+    search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title']
+    ordering = ['created_at']
+    exclude = ('created_by', 'modified_by')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(poll_item__poll__company=request.user.company)

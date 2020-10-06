@@ -18,5 +18,7 @@ urlpatterns = [
     path('<int:survey_id>/vote/', views.vote, name='vote'),
     path('vote_done/<int:survey_id>/<int:survey_option_id>/', views.vote_done, name='vote_done'),
     path('live_voting/', views.live_voting, name='live_voting'),
-    path('open_live_voting/<int:poll_id>/', views.open_live_voting, name='open_live_voting'),
+    path('open_live_voting/<int:poll_item_id>/', views.open_live_voting, name='open_live_voting'),
+    path('close_live_voting/<int:poll_item_id>/', views.close_live_voting, name='close_live_voting'),
+    path('live_voting_openning_json/', views.live_voting_openning_json, name='live_voting_openning_json'),
 ]

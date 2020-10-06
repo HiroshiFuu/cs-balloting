@@ -17,6 +17,7 @@ from .models import SurveyVote
 from .models import SurveyResult
 from .models import LivePoll
 from .models import LivePollItem
+from .models import LivePollItemVote
 
 from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
@@ -27,6 +28,7 @@ from django.db.models import Sum
 
 from collections import defaultdict
 from datetime import date
+from datetime import datetime
 
 
 @staff_member_required
@@ -51,22 +53,70 @@ def live_voting(request):
         poll = LivePoll.objects.all().filter(company=request.user.company, is_chosen=True).first()
         poll_details = {}
         if poll:
+            count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=request.user.company, is_active=True))
             poll_details['title'] = poll.title
             LivePollItems = LivePollItem.objects.filter(poll=poll)
-            poll_items = []
-            for item in LivePollItems:
-                poll_item = {}
-                poll_item['id'] = item.id
-                poll_item['text'] = item.text
-                poll_items.append(poll_item)
-            poll_details['items'] = poll_items
+            items = []
+            has_voting_opened = False
+            for poll_item in LivePollItems:
+                item = {}
+                item['id'] = poll_item.id
+                item['text'] = poll_item.text
+                item['is_open'] = poll_item.is_open
+                item_result = {}
+                smile_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1))
+                item_result['smile'] = smile_count
+                meh_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2))
+                item_result['meh'] = meh_count
+                frown_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3))
+                item_result['frown'] = frown_count
+                item_result['miss'] = count_users - smile_count - meh_count - frown_count
+                item['result'] = item_result
+                items.append(item)
+                if poll_item.is_open:
+                    has_voting_opened = True
+            poll_details['items'] = items
             print('poll_details', poll_details)
-    return render(request, 'live_voting.html', {'poll_details': poll_details})
+    return render(request, 'live_voting.html', {'poll_details': poll_details, 'has_voting_opened': has_voting_opened})
 
 
 @login_required(login_url='/login/')
-def open_live_voting(request, poll_id):
-    return HttpResponse('OK')
+def open_live_voting(request, poll_item_id):
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        poll_item = LivePollItem.objects.get(pk=poll_item_id)
+        poll_item.poll.items.update(is_open=False)
+        poll_item.is_open = True
+        poll_item.opened_at = datetime.now()
+        poll_item.opening_duration_minustes = 5
+        poll_item.save()
+    return HttpResponseRedirect(reverse('ballot:live_voting', args=()))
+
+
+@login_required(login_url='/login/')
+def close_live_voting(request, poll_item_id):
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        poll_item = LivePollItem.objects.get(pk=poll_item_id)
+        poll_item.is_open = False
+        poll_item.save()
+    return HttpResponseRedirect(reverse('ballot:live_voting', args=()))
+
+
+@login_required(login_url='/login/')
+def live_voting_openning_json(request):
+    poll_item = LivePollItem.objects.filter(poll__company=request.user.company, is_open=True).first()
+    if poll_item:
+        opening_seconds_left = poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds()
+        if opening_seconds_left < 0:
+            opening_seconds_left = 0
+        opening_data = {
+            'poll_item_id': poll_item.pk,
+            'opened_at': poll_item.opened_at,
+            'opening_duration_minustes': poll_item.opening_duration_minustes,
+            'opening_seconds_left': opening_seconds_left
+        }
+        return JsonResponse(opening_data)
+    else:
+        return HttpResponse('Not Found')
 
 
 @login_required(login_url='/login/')
