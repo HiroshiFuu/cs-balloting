@@ -86,18 +86,18 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 id="stats_title" class="card-title">Survey Stats - {{ chart_data.title }}</h3>
+            <h3 id="stats_title" class="card-title">Survey Stats - {{ survey_chart_data.title }}</h3>
           </div>
           <div class="row">
-            <div id="chartdiv_vote" class="amCharts col-6"></div>
-            <div id="chartdiv_count" class="amCharts col-6"></div>
+            <div id="survey_chartdiv_vote" class="amCharts col-6"></div>
+            <div id="survey_chartdiv_count" class="amCharts col-6"></div>
           </div>
         </div>
       </div>
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 class="card-title">Votings</h3>
+            <h3 class="card-title">Survey Votings</h3>
           </div>
           <div class="table-responsive">
             <table class="table card-table table-vcenter text-nowrap datatable">
@@ -112,7 +112,7 @@
                 </tr>
               </thead>
               <tbody>
-                {% for voting in votings %}
+                {% for voting in survey_votings %}
                 <tr>
                   <td><span class="text-muted">{{ voting.id }}</span></td>
                   <td>{{ voting.user.username }}</td>
@@ -146,6 +146,71 @@
         </div>
       </div>
     </div>
+
+    <div class="row row-cards row-deck">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 id="stats_title" class="card-title">Live Voting Stats - {{ live_poll_chart_data.title }}</h3>
+          </div>
+          <div class="row">
+            <!-- <div id="chartdiv_vote" class="amCharts col-6"></div> -->
+            <!-- <div id="chartdiv_count" class="amCharts col-6"></div> -->
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Live Voting Votes</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="table card-table table-vcenter text-nowrap datatable">
+              <thead>
+                <tr>
+                  <th class="w-1">No.</th>
+                  <th>User</th>
+                  <th>Live Voting</th>
+                  <th>Live Voting Option</th>
+                  <th>Voted At</th>
+                  <th>Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for voting in votings %}
+                <tr>
+                  <td><span class="text-muted">{{ voting.id }}</span></td>
+                  <td>{{ voting.user.username }}</td>
+                  <td>{{ voting.survey_option.survey.title }}</td>
+                  <td>{{ voting.survey_option.text }}</td>
+                  <td>{{ voting.created_at }}</td>
+                  <td>{{ voting.user.weight }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <script>
+            // require(["datatables", "jquery"], function(datatable, $) {
+            //   $(".datatable").DataTable({
+            //     "paging": true,
+            //     "info": true,
+            //     "ordering": true,
+            //     "searchin": true,
+            //     "columns": [
+            //       { "searchable": false },
+            //       { "searchable": true },
+            //       { "searchable": true },
+            //       { "searchable": true },
+            //       { "searchable": false },
+            //       { "searchable": true }
+            //     ]
+            //   });
+            // });
+            </script>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock content %}
@@ -170,7 +235,7 @@ require(["jquery"], function() {
         // on successfull creating object
         console.log("update_survey_stats", response);
         $("#stats_title").text("Survey Stats - " + response.title);
-        populate_stat_charts(response.data);
+        populate_survey_stat_charts(response.data);
       },
       error: function (response) {
         // alert the error if any error occured
@@ -179,13 +244,13 @@ require(["jquery"], function() {
     })
   }
 
-  function populate_stat_charts(chart_data) {
+  function populate_survey_stat_charts(survey_chart_data) {
     am4core.ready(function() {
       // Themes begin
       am4core.useTheme(am4themes_animated);
       // Themes end
-      populate_chart(am4themes_material, "chartdiv_vote", chart_data, "votes", "option");
-      populate_chart(am4themes_kelly, "chartdiv_count", chart_data, "counts", "option");
+      populate_chart(am4themes_material, "survey_chartdiv_vote", survey_chart_data, "votes", "option");
+      populate_chart(am4themes_kelly, "survey_chartdiv_count", survey_chart_data, "counts", "option");
     }); // end am4core.ready()
   }
 
@@ -225,8 +290,10 @@ require(["jquery"], function() {
   }
 
   $(document).ready(function() {
-    var chart_data = {{ chart_data.data|safe }};
-    populate_stat_charts(chart_data);
+    var survey_chart_data = {{ survey_chart_data.data|safe }};
+    populate_survey_stat_charts(survey_chart_data);
+    // var live_poll_chart_data = {{ live_poll_chart_data.data|safe }};
+    // populate_live_poll_stat_charts(live_poll_chart_data);
 
     // console.log("url", $(".stats_link").first().data("url"));
     $(".stats_link").each(function() {

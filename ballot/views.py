@@ -18,6 +18,7 @@ from .models import SurveyResult
 from .models import LivePoll
 from .models import LivePollItem
 from .models import LivePollItemVote
+from .models import LivePollResult
 
 from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
@@ -76,8 +77,25 @@ def live_voting(request):
                 if poll_item.is_open:
                     has_voting_opened = True
             poll_details['items'] = items
-            print('poll_details', poll_details)
-    return render(request, 'live_voting.html', {'poll_details': poll_details, 'has_voting_opened': has_voting_opened})
+            # print('poll_details', poll_details)
+        return render(request, 'live_voting.html', {'poll_details': poll_details, 'has_voting_opened': has_voting_opened})
+    else:
+        if request.user.is_superuser:
+            return HttpResponse('Admin Page U/C')
+        else:
+            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+
+
+@login_required(login_url='/login/')
+def cur_live_voting(request):
+    poll_item = LivePollItem.objects.all().filter(poll__company=request.user.company, is_open=True).first()
+    if poll_item is not None:
+        opening_seconds_left = poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds()
+        if opening_seconds_left <= 0:
+            poll_item.is_open = False
+            poll_item.save()
+            poll_item = None
+    return render(request, 'cur_live_voting.html', {'poll_item': poll_item})
 
 
 @login_required(login_url='/login/')
@@ -105,7 +123,7 @@ def close_live_voting(request, poll_item_id):
 def live_voting_openning_json(request):
     poll_item = LivePollItem.objects.filter(poll__company=request.user.company, is_open=True).first()
     if poll_item:
-        opening_seconds_left = poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds()
+        opening_seconds_left = int(poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds())
         if opening_seconds_left < 0:
             opening_seconds_left = 0
         opening_data = {
@@ -116,13 +134,55 @@ def live_voting_openning_json(request):
         }
         return JsonResponse(opening_data)
     else:
-        return HttpResponse('Not Found')
+        return JsonResponse({'opening_seconds_left': -1})
+
+
+@login_required(login_url='/login/')
+def live_poll_vote(request, live_poll_id):
+    live_poll = get_object_or_404(LivePollItem, pk=live_poll_id)
+    # print('live_poll_option', request.POST['live_poll_option'])
+    try:
+        live_poll_option = int(request.POST['live_poll_option'])
+        # print(live_poll_option)
+        # print(request.user.weight)
+        vote = LivePollItemVote.objects.filter(user=request.user, poll_item=live_poll, vote_option=live_poll_option).first()
+        if vote is None:
+            LivePollItemVote.objects.create(user=request.user, poll_item=live_poll, vote_option=live_poll_option)
+            compute_live_poll_voting_result(live_poll)
+            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+        else:
+            print('Something Wrong', 'live_poll vote', live_poll_id)
+            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+    except (KeyError, LivePollItem.DoesNotExist, LivePollItem.DoesNotExist):
+        return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+    return HttpResponseRedirect(reverse('ballot:cur_live_voting', args=()))
+
+
+def compute_live_poll_voting_result(live_poll):
+    live_poll_result, created = LivePollResult.objects.get_or_create(live_poll=live_poll)
+    results = []
+    for i in range(3):
+        result = {'votes': 0, 'counts': 0}
+        result['option'] = i
+        voting = LivePollItemVote.objects.filter(vote_option=i).values('poll_item__text').annotate(
+            num_votes=Count('poll_item__id'), total_votes=Sum('user__weight'))
+        # print(voting)
+        if voting.exists():
+            result['votes'] = voting[0]['total_votes']
+            result['counts'] = voting[0]['num_votes']
+        results.append(result)
+    print('compute_live_poll_voting_result', results)
+    live_poll_result.result = results
+    live_poll_result.save()
 
 
 @login_required(login_url='/login/')
 def dashboard(request):
-    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
-        surveys = Survey.objects.all().filter(company=request.user.company)
+    if (request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY) or request.user.is_superuser:
+        if request.user.is_superuser:
+            surveys = Survey.objects.all()
+        else:
+            surveys = Survey.objects.all().filter(company=request.user.company)
         surveys_details = []
         count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=request.user.company, is_active=True))
         for survey in surveys:
@@ -165,27 +225,30 @@ def dashboard(request):
             surveys_details.append(survey_details)
         # print(surveys_details)
         survey_chart = surveys.first()
-        chart_data = {}
+        survey_chart_data = {}
         if survey_chart is not None:
             survery_result = SurveyResult.objects.filter(survey=survey_chart).first()
             if survery_result is not None:
                 data = survery_result.result
             else:
                 data = {}
-            chart_data = {
+            survey_chart_data = {
                 'title': survey_chart.title,
                 'data': data,
             }
-        # print(chart_data)
-        votings = SurveyVote.objects.all()
-        return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'chart_data': chart_data, 'votings': votings})
+        # print(survey_chart_data)
+        survey_votings = SurveyVote.objects.all()
+        return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings})
     else:
         return HttpResponseRedirect(reverse('ballot:surveys', args=()))
 
 
 @login_required(login_url='/login/')
 def surveys(request):
-    surveys = Survey.objects.all().filter(company=request.user.company)
+    if request.user.is_superuser:
+        surveys = Survey.objects.all()
+    else:
+        surveys = Survey.objects.all().filter(company=request.user.company)
     return render(request, 'survey_list.html', {'surveys': surveys})
 
 
@@ -200,7 +263,7 @@ def survey(request, survey_id):
 
 
 @login_required(login_url='/login/')
-def vote(request, survey_id):
+def survey_vote(request, survey_id):
     survey = get_object_or_404(Survey, pk=survey_id)
     # print('survey_option', request.POST['survey_option'])
     try:
@@ -211,31 +274,31 @@ def vote(request, survey_id):
             user=request.user, survey_option=survey_option)
         # print(vote, created)
         if not created:
-            print('Something Wrong', 'vote', survey_id)
-            return HttpResponseRedirect(reverse('ballot:vote_done', args=(survey.id, survey_option.id)))
-        compute_voting_result(survey)
-        return HttpResponseRedirect(reverse('ballot:vote_done', args=(survey.id, survey_option.id)))
+            print('Something Wrong', 'survey vote', survey_id)
+            return HttpResponseRedirect(reverse('ballot:survery_vote_done', args=(survey.id, survey_option.id)))
+        compute_survey_voting_result(survey)
+        return HttpResponseRedirect(reverse('ballot:survery_vote_done', args=(survey.id, survey_option.id)))
     except (KeyError, Survey.DoesNotExist, SurveyOption.DoesNotExist):
         return HttpResponseRedirect(reverse('ballot:survey', args=(survey.id,)))
     return render(request, 'survey.html', {'survey': survey})
 
 
 @login_required(login_url='/login/')
-def vote_done(request, survey_id, survey_option_id):
+def survery_vote_done(request, survey_id, survey_option_id):
     survey = get_object_or_404(Survey, pk=survey_id)
     survey_option = get_object_or_404(SurveyOption, pk=survey_option_id)
     context = {
         'Title': survey.title,
         'Option': survey_option.text,
     }
-    compute_voting_result(survey)
-    return render(request, 'vote_done.html', context)
+    compute_survey_voting_result(survey)
+    return render(request, 'survery_vote_done.html', context)
 
 
 @login_required(login_url='/login/')
 def voting_result_json(request, survey_id):
     survey = get_object_or_404(Survey, pk=survey_id)
-    compute_voting_result(survey)
+    compute_survey_voting_result(survey)
     chart_data = {
         'title': survey.title,
         'data': SurveyResult.objects.filter(survey=survey).first().result,
@@ -243,7 +306,7 @@ def voting_result_json(request, survey_id):
     return JsonResponse(chart_data)
 
 
-def compute_voting_result(survey):
+def compute_survey_voting_result(survey):
     survey_result, created = SurveyResult.objects.get_or_create(survey=survey)
     # print(created, survey_result)
     # votings = SurveyVote.objects.filter(survey_option__survey=survey).values('survey_option__text').annotate(num_votes=Count('survey_option__id'), total_votes=Sum('user__weight'))

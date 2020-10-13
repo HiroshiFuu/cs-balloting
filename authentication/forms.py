@@ -40,10 +40,11 @@ class CustomCompanyCreationForm(UserCreationForm):
         "password_mismatch": _("The two password fields didn’t match."),
     }
     random_password = gen_random_password()
-    email = forms.EmailField(
+    username = forms.EmailField(
+        label=_("Username"),
         widget=forms.EmailInput(
             attrs={
-                'placeholder': '',
+                'placeholder': 'E-mail',
                 'class': 'form-control'
             }
         ),
@@ -96,11 +97,12 @@ class CustomUserCreationForm(UserCreationForm):
     }
     random_password = gen_random_password()
 
-    email = forms.EmailField(
+    username = forms.EmailField(
+        label=_("Username"),
         widget=forms.EmailInput(
             attrs={
-                "placeholder": "",
-                "class": "form-control"
+                'placeholder': 'E-mail',
+                'class': 'form-control'
             }
         ),
         required=True

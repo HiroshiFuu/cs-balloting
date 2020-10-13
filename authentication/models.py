@@ -72,12 +72,12 @@ def set_group_when_created_company_user(sender, instance, created, *args, **kwar
 def send_password_reset_email_when_created(sender, instance, created, *args, **kwargs):
     if created and not instance.is_superuser:
         user = AuthUser._default_manager.get(
-            email__iexact=instance.email, is_active=True)
+            username__iexact=instance.username, is_active=True)
         current_site = Site.objects.get(id=SITE_ID)
         site_name = current_site.name
         domain = current_site.domain
         context = {
-            'email': user.email,
+            'email': user.username,
             'domain': domain,
             'site_name': site_name,
             'uid': urlsafe_base64_encode(force_bytes(user.pk)),
@@ -91,5 +91,5 @@ def send_password_reset_email_when_created(sender, instance, created, *args, **k
         body = loader.render_to_string(
             'registration/password_reset_email.html', context)
         email_message = EmailMultiAlternatives(
-            subject, body, 'admin@abc.com', [user.email])
+            subject, body, 'admin@abc.com', [user.username])
         email_message.send()

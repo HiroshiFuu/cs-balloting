@@ -11,6 +11,11 @@
             <a href="{% url 'ballot:live_voting' %}" class="nav-link live_voting"><i class="fe fe-check-square"></i>Live Voting</a>
           </li>
           {% endif %}
+          {% if not request.user.is_staff %}
+          <li class="nav-item">
+            <a href="{% url 'ballot:cur_live_voting' %}" class="nav-link cur_live_voting"><i class="fe fe-check-square"></i>Current Live Voting</a>
+          </li>
+          {% endif %}
           <li class="nav-item">
             <a href="{% url 'ballot:surveys' %}" class="nav-link surveys"><i class="fe fe-check-circle"></i>Surveys</a>
           </li>

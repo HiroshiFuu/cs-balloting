@@ -63,24 +63,25 @@ def login_view(request):
     return render(request, 'accounts/login.html', {'form': form, 'msg': msg})
 
 
-@login_required(login_url='/login/')
-@staff_member_required
-def register_user(request):
-    msg = None
-    success = False
+# @login_required(login_url='/login/')
+# @staff_member_required
+# def register_user(request):
+#     msg = None
+#     success = False
 
-    if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            # username = form.cleaned_data.get('username')
-            # raw_password = form.cleaned_data.get('password1')
-            # user = authenticate(username=username, password=raw_password)
-            msg = 'User created.'
-            success = True
-            # return redirect('/login/')
-        else:
-            msg = 'Form is not valid'
-    else:
-        form = CustomUserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form, 'msg': msg, 'success': success})
+#     if request.method == 'POST':
+#         form = CustomUserCreationForm(request.POST)
+#         if form.is_valid():
+#             print(form.cleaned_data.get('username'))
+#             form.save()
+#             # username = form.cleaned_data.get('username')
+#             # raw_password = form.cleaned_data.get('password1')
+#             # user = authenticate(username=username, password=raw_password)
+#             msg = 'User created.'
+#             success = True
+#             # return redirect('/login/')
+#         else:
+#             msg = 'Form is not valid'
+#     else:
+#         form = CustomUserCreationForm()
+#     return render(request, 'accounts/register.html', {'form': form, 'msg': msg, 'success': success})

@@ -7,6 +7,8 @@ from core.models import LogMixin
 
 from authentication.models import Company
 
+from .constants import POLL_TYPES
+
 from jsonfield import JSONField
 
 
@@ -88,6 +90,7 @@ class LivePollItem(LogMixin):
     is_open = models.BooleanField('Is Open', default=False)
     opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
     opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', null=True, blank=True)
+    poll_type = models.PositiveSmallIntegerField('Poll Type', choices=POLL_TYPES, default=1)
 
     class Meta:
         managed = True
@@ -113,3 +116,30 @@ class LivePollItemVote(LogMixin):
 
     def __str__(self):
         return '{}: {} {}'.format(self.poll_item, self.user, self.vote_option)
+
+
+class LivePollProxy(LogMixin):
+    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='main_user')
+    proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='proxy_users')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll Proxy'
+        verbose_name_plural = 'Live Poll Proxys'
+
+    def __str__(self):
+        return '{}: {}'.format(self.main_user, self.proxy_users)
+
+
+class LivePollResult(LogMixin):
+    live_poll = models.OneToOneField(LivePollItem, on_delete=models.CASCADE)
+    result = JSONField(blank=True, null=True)
+    voting_date = models.DateField(verbose_name='Voting Date')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll Result'
+        verbose_name_plural = 'Live Poll Results'
+
+    def __str__(self):
+        return '{}: {}'.format(self.live_poll, self.result)

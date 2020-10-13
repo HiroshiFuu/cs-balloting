@@ -49,12 +49,11 @@ class AuthGroupAdmin(GroupAdmin):
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company', 'username', 'email',
-                    'weight', 'is_company_user', 'is_active']
+    list_display = ['company', 'username', 'weight', 'is_company_user', 'is_active']
     ordering = ('username',)
-    list_display_links = ('username', 'email')
+    list_display_links = ('username',)
     fieldsets = (
-        (None, {'fields': ['username', 'email', 'weight', 'company']}),
+        (None, {'fields': ['username', 'weight', 'company']}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': [
          'groups', 'is_staff', 'is_active', 'password']}),
@@ -62,7 +61,7 @@ class AuthUserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ['username', 'email', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
+            'fields': ['username', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
          ),
     )
 
@@ -89,7 +88,7 @@ class AuthUserAdmin(UserAdmin):
                 fieldsets = copy.deepcopy(self.fieldsets)
             else:
                 fieldsets = (
-                    (None, {'fields': ['username', 'email', 'weight', 'company']}),
+                    (None, {'fields': ['username', 'weight', 'company']}),
                     ('Permissions', {'fields': ['is_active', 'password']}),
                 )
         else:
@@ -98,9 +97,9 @@ class AuthUserAdmin(UserAdmin):
                 self.add_form = CustomCompanyCreationForm
             else:
                 self.add_form = CustomUserCreationForm
-                # fieldsets[0][1]['fields'].pop(-1)
-                fieldsets[0][1]['fields'] = ['username',
-                                             'email', 'weight', 'password1', 'password2']
+                fieldsets = (
+                    (None, {'fields': ['username', 'weight', 'password1', 'password2']}),
+                )
         # print('get_fieldsets', fieldsets)
         return fieldsets
 
@@ -109,6 +108,7 @@ class AuthUserAdmin(UserAdmin):
         if not change and request.user.user_type == USER_TYPE_COMPANY:
             obj.company = request.user.company
             obj.user_type = USER_TYPE_USER
+            obj.email = obj.username
         super().save_model(request, obj, form, change)
 
     # def get_changeform_initial_data(self, request):
@@ -118,20 +118,20 @@ class AuthUserAdmin(UserAdmin):
 # @admin.register(CompanyUser)
 # class CompanyUserAdmin(admin.ModelAdmin):
 #     add_form = CustomUserCreationForm
-#     list_display = ('company', 'username', 'email', 'weight', 'is_active')
+#     list_display = ('company', 'username', 'weight', 'is_active')
 #     list_filter = ('company', 'weight', 'is_active')
 #     fieldsets = (
-#         (None, {'fields': ['company', 'username', 'email', 'weight']}),
+#         (None, {'fields': ['company', 'username', 'weight']}),
 #         ('Personal info', {'fields': ('first_name', 'last_name')}),
 #         ('Permissions', {'fields': ('is_active',)}),
 #     )
 #     add_fieldsets = (
 #         (None, {
 #             'classes': ('wide',),
-#             'fields': ['company', 'username', 'email', 'weight', 'is_active', 'password1', 'password2']}
+#             'fields': ['company', 'username', 'weight', 'is_active', 'password1', 'password2']}
 #          ),
 #     )
-#     search_fields = ('email', 'username')
+#     search_fields = ('username')
 #     ordering = ('email',)
 #     list_display_links = ('username', 'email')
 
