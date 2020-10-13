@@ -64,7 +64,7 @@ AUTHENTICATION_BACKENDS = [
     # `allauth` specific authentication methods, such as login by e-mail
     # 'allauth.account.auth_backends.AuthenticationBackend',
     # custom authentication methods, login by e-mail
-    'authentication.auth_backends.AuthenticationBackend',
+    # 'authentication.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'core.urls'
@@ -173,8 +173,8 @@ AUTH_USER_MODEL = 'authentication.AuthUser'
 
 LOGIN_REDIRECT_URL = 'ballot:home'
 LOGOUT_REDIRECT_URL = 'ballot:home'
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# ACCOUNT_EMAIL_REQUIRED = True
 
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(PROJECT_DIR, 'password_reset_emails')

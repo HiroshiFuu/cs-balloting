@@ -1,5 +1,4 @@
 Django==2.2.14
-django-allauth
 gunicorn
 whitenoise
 Werkzeug
