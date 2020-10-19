@@ -36,15 +36,15 @@
                 <div class="form-group">
                   <div id="live_poll_options" class="selectgroup selectgroup-pills">
                     <label class="selectgroup-item">
-                      <input type="radio" id="option0" name="live_poll_option" value="0" class="selectgroup-input">
+                      <input type="radio" id="option0" name="live_poll_option" value="1" class="selectgroup-input">
                       <span class="selectgroup-button"><i class="dropdown-icon fa fa-smile-o"></i></span>
                     </label>
                     <label class="selectgroup-item">
-                      <input type="radio" id="option1" name="live_poll_option" value="1" class="selectgroup-input">
+                      <input type="radio" id="option1" name="live_poll_option" value="2" class="selectgroup-input">
                       <span class="selectgroup-button"><i class="dropdown-icon fa fa-meh-o"></i></span>
                     </label>
                     <label class="selectgroup-item">
-                      <input type="radio" id="option2" name="live_poll_option" value="2" class="selectgroup-input">
+                      <input type="radio" id="option2" name="live_poll_option" value="3" class="selectgroup-input">
                       <span class="selectgroup-button"><i class="dropdown-icon fa fa-frown-o"></i></span>
                     </label>
                   </div>
@@ -57,7 +57,7 @@
             </div>
           </div>
           {% endif %}
-      </div>
+        </div>
       </form>
     </div>
   </div>
@@ -79,7 +79,7 @@
     var check_seconds_left = setInterval(function() {
       $.get("{% url 'ballot:live_voting_openning_json' %}",
         function(ret) {
-          console.log(ret);
+          console.log("cur_live_voting", ret);
           $("#time_label").text("Time Left: " + ret["opening_seconds_left"] + " seconds");
           if (parseInt(ret["opening_seconds_left"], 10) == 0)
           {
