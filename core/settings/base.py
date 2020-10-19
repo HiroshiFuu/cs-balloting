@@ -35,11 +35,10 @@ LOCAL_APPS = [ # Enable the inner app
 ]
 
 THIRD_PARTY_APPS = [
-    # 'allauth',
-    # 'allauth.account',
     'django_extensions',
     'import_export',
     'adminsortable2',
+    'django_user_agents',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -55,6 +54,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_user_agents.middleware.UserAgentMiddleware',
     'core.middleware.CurrentUserMiddleware',
 ]
 

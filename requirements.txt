@@ -1,4 +1,4 @@
-Django==2.2.14
+Django==2.2.16
 gunicorn
 whitenoise
 Werkzeug
@@ -9,3 +9,4 @@ django-extensions
 django-import-export
 django-admin-sortable2
 django-inline-actions
+django-user-agents
