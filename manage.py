@@ -15,7 +15,7 @@ def main():
     )
     environ.Env.read_env(env_file=os.path.join(os.getcwd(), '.env'))
     RUN_ENV = env.str('RUN_ENV', 'local')
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'project.' + RUN_ENV)
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings.' + RUN_ENV)
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
