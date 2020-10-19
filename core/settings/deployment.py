@@ -1,5 +1,5 @@
 # Overrides
-from .settings import *  # noqa: F401
+from .base import *  # noqa: F401
 
 SECRET_KEY = 'za#q^j+$6frru&3*)b0yl=#9wmue%rf38akqux(fjvl-&zy@_l'
 
