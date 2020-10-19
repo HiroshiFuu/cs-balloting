@@ -4,7 +4,7 @@
 {% block styles %}
 <style>
   .amCharts {
-    height: 240px;
+    height: 260px;
   }
 </style>
 {% endblock %}
@@ -100,15 +100,15 @@
             <h3 class="card-title">Survey Votings</h3>
           </div>
           <div class="table-responsive">
-            <table class="table card-table table-vcenter text-nowrap datatable">
+            <table id="survey_datatable" class="table card-table table-vcenter text-nowrap datatable">
               <thead>
                 <tr>
                   <th class="w-1">No.</th>
                   <th>User</th>
                   <th>Survey</th>
                   <th>Survey Option</th>
-                  <th>Voted At</th>
                   <th>Weight</th>
+                  <th>Voted At</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,19 +118,19 @@
                   <td>{{ voting.user.username }}</td>
                   <td>{{ voting.survey_option.survey.title }}</td>
                   <td>{{ voting.survey_option.text }}</td>
-                  <td>{{ voting.created_at }}</td>
                   <td>{{ voting.user.weight }}</td>
+                  <td>{{ voting.created_at }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
             <script>
             require(["datatables", "jquery"], function(datatable, $) {
-              $(".datatable").DataTable({
+              $("#survey_datatable").DataTable({
                 "paging": true,
                 "info": true,
                 "ordering": true,
-                "searchin": true,
+                "searching": true,
                 "columns": [
                   { "searchable": false },
                   { "searchable": true },
@@ -151,61 +151,50 @@
       <div class="col-12">
         <div class="card">
           <div class="card-header">
-            <h3 id="stats_title" class="card-title">Live Voting Stats - {{ live_poll_chart_data.title }}</h3>
-          </div>
-          <div class="row">
-            <!-- <div id="chartdiv_vote" class="amCharts col-6"></div> -->
-            <!-- <div id="chartdiv_count" class="amCharts col-6"></div> -->
-          </div>
-        </div>
-      </div>
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">
             <h3 class="card-title">Live Voting Votes</h3>
           </div>
           <div class="table-responsive">
-            <table class="table card-table table-vcenter text-nowrap datatable">
+            <table id="live_poll_datatable" class="table card-table table-vcenter text-nowrap datatable">
               <thead>
                 <tr>
                   <th class="w-1">No.</th>
+                  <th>Batch No.</th>
+                  <th>Item</th>
                   <th>User</th>
-                  <th>Live Voting</th>
-                  <th>Live Voting Option</th>
+                  <th>Option</th>
                   <th>Voted At</th>
-                  <th>Weight</th>
                 </tr>
               </thead>
               <tbody>
-                {% for voting in votings %}
+                {% for voting in live_poll_votings %}
                 <tr>
                   <td><span class="text-muted">{{ voting.id }}</span></td>
-                  <td>{{ voting.user.username }}</td>
-                  <td>{{ voting.survey_option.survey.title }}</td>
-                  <td>{{ voting.survey_option.text }}</td>
+                  <td>{{ voting.batch_no }}</td>
+                  <td>{{ voting.item }}</td>
+                  <td>{{ voting.username }}</td>
+                  <td>{{ voting.option }}</td>
                   <td>{{ voting.created_at }}</td>
-                  <td>{{ voting.user.weight }}</td>
                 </tr>
                 {% endfor %}
               </tbody>
             </table>
             <script>
-            // require(["datatables", "jquery"], function(datatable, $) {
-            //   $(".datatable").DataTable({
-            //     "paging": true,
-            //     "info": true,
-            //     "ordering": true,
-            //     "searchin": true,
-            //     "columns": [
-            //       { "searchable": false },
-            //       { "searchable": true },
-            //       { "searchable": true },
-            //       { "searchable": true },
-            //       { "searchable": false },
-            //       { "searchable": true }
-            //     ]
-            //   });
-            // });
+            require(["datatables", "jquery"], function(datatable, $) {
+              $("#live_poll_datatable").DataTable({
+                "paging": true,
+                "info": true,
+                "ordering": true,
+                "searching": true,
+                "columns": [
+                  { "searchable": false },
+                  { "searchable": true },
+                  { "searchable": true },
+                  { "searchable": true },
+                  { "searchable": true },
+                  { "searchable": false },
+                ]
+              });
+            });
             </script>
           </div>
         </div>
