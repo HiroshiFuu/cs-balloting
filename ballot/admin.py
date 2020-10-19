@@ -15,6 +15,7 @@ from .models import LivePollItem
 from .models import LivePollItemVote
 from .models import LivePollProxy
 from .models import LivePollResult
+from .models import LivePollBatch
 
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
@@ -157,10 +158,13 @@ class LivePollItemVoteAdmin(ImportExportModelAdmin):
     list_display = [
         'user',
         'poll_item',
+        'poll_batch',
         'vote_option',
+        'ip_address',
+        'user_agent',
         'created_at',
     ]
-    search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title']
+    search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title', 'poll_batch__batch_no']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
 
@@ -183,13 +187,14 @@ class LivePollProxyAdmin(ImportExportModelAdmin):
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == 'main_user':
-            kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+            if not request.user.is_superuser:
+                kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
         return super(LivePollProxyAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_dbfield(self, db_field, request=None, **kwargs):
-        print(db_field.name)
         if db_field.name == 'proxy_users':
-            kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+            if not request.user.is_superuser:
+                kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
         return super(LivePollProxyAdmin, self).formfield_for_dbfield(db_field, request, **kwargs)
 
     def get_queryset(self, request):
@@ -215,3 +220,20 @@ class LivePollResultAdmin(ImportExportModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(live_poll__poll__company=request.user.company)
+
+
+@admin.register(LivePollBatch)
+class LivePollBatchAdmin(ImportExportModelAdmin):
+    list_display = [
+        'poll',
+        'batch_no',
+    ]
+    search_fields = ['poll__title', 'batch_no']
+    ordering = ['created_at']
+    exclude = ('created_by', 'modified_by')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(poll__company=request.user.company)

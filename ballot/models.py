@@ -15,7 +15,7 @@ from jsonfield import JSONField
 class Survey(LogMixin):
     title = models.CharField(max_length=255)
     end_date = models.DateField(null=True, verbose_name='End Date')
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
 
     class Meta:
         managed = True
@@ -29,7 +29,7 @@ class Survey(LogMixin):
 class SurveyOption(LogMixin):
     text = models.CharField(max_length=255)
     survey = models.ForeignKey(
-        Survey, related_name='options', on_delete=models.CASCADE)
+        Survey, related_name='options', on_delete=models.PROTECT)
 
     class Meta:
         managed = True
@@ -42,9 +42,9 @@ class SurveyOption(LogMixin):
 
 
 class SurveyVote(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     survey_option = models.ForeignKey(
-        SurveyOption, related_name='votes', on_delete=models.CASCADE)
+        SurveyOption, related_name='votes', on_delete=models.PROTECT)
 
     class Meta:
         managed = True
@@ -56,7 +56,7 @@ class SurveyVote(LogMixin):
 
 
 class SurveyResult(LogMixin):
-    survey = models.OneToOneField(Survey, on_delete=models.CASCADE)
+    survey = models.OneToOneField(Survey, on_delete=models.PROTECT)
     result = JSONField(blank=True, null=True)
 
     class Meta:
@@ -70,7 +70,7 @@ class SurveyResult(LogMixin):
 
 class LivePoll(LogMixin):
     title = models.CharField(max_length=255)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
+    company = models.ForeignKey(Company, on_delete=models.PROTECT)
     is_chosen = models.BooleanField('Is Chosen', default=False)
 
     class Meta:
@@ -83,8 +83,7 @@ class LivePoll(LogMixin):
 
 
 class LivePollItem(LogMixin):
-    poll = models.ForeignKey(
-        LivePoll, related_name='items', on_delete=models.CASCADE)
+    poll = models.ForeignKey(LivePoll, related_name='items', on_delete=models.PROTECT)
     order = models.PositiveSmallIntegerField('Sequence Order', default=0)
     text = models.CharField(max_length=255)
     is_open = models.BooleanField('Is Open', default=False)
@@ -103,10 +102,25 @@ class LivePollItem(LogMixin):
         return '{}: {}.{}'.format(self.poll, self.order, self.text)
 
 
+class LivePollBatch(LogMixin):
+    poll = models.ForeignKey(LivePoll, related_name='batches', on_delete=models.PROTECT)
+    batch_no = models.PositiveIntegerField('Batch No.')
+
+    class Meta:
+        managed = True
+        verbose_name = 'Live Poll Batch'
+        verbose_name_plural = 'Live Poll Batches'
+
+    def __str__(self):
+        return '{}. {}'.format(self.poll, self.batch_no)
+
+
 class LivePollItemVote(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    poll_item = models.ForeignKey(
-        LivePollItem, related_name='item_votes', on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
+    user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
+    poll_item = models.ForeignKey(LivePollItem, related_name='item_votes', on_delete=models.PROTECT)
+    poll_batch = models.ForeignKey(LivePollBatch, related_name='item_batches', on_delete=models.PROTECT, null=True, blank=True)
     vote_option = models.PositiveSmallIntegerField('Vote Option')
 
     class Meta:
@@ -119,22 +133,24 @@ class LivePollItemVote(LogMixin):
 
 
 class LivePollProxy(LogMixin):
-    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='main_user')
+    poll_batch = models.ForeignKey(LivePollBatch, related_name='proxy_batches', on_delete=models.PROTECT, null=True, blank=True)
+    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='main_user')
     proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='proxy_users')
 
     class Meta:
         managed = True
         verbose_name = 'Live Poll Proxy'
         verbose_name_plural = 'Live Poll Proxys'
+        unique_together = ('poll_batch', 'main_user')
 
     def __str__(self):
-        return '{}: {}'.format(self.main_user, self.proxy_users)
+        return '{}. {}: {}'.format(self.poll_batch, self.main_user, self.proxy_users)
 
 
 class LivePollResult(LogMixin):
-    live_poll = models.OneToOneField(LivePollItem, on_delete=models.CASCADE)
+    live_poll = models.OneToOneField(LivePollItem, on_delete=models.PROTECT)
     result = JSONField(blank=True, null=True)
-    voting_date = models.DateField(verbose_name='Voting Date')
+    voting_date = models.DateField(verbose_name='Voting Date', blank=True, null=True)
 
     class Meta:
         managed = True
