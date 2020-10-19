@@ -8,6 +8,7 @@ a.disabled {
 }
 td.status {
   font-size: 20px;
+  padding-left: 2rem;
 }
 td.status > .dropdown-icon {
   margin-left: 1rem;
@@ -16,11 +17,11 @@ td.status > .dropdown-icon {
 </style>
 {% endblock %}
 {% block content %}
-<div class="my-3 my-md-5">
+<div class="my-12 my-md-12">
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">
-        {{ poll_details.title }}
+        {{ poll_details.title }} Batch No. {{ poll_details.batch_no }} <a href="{% url 'ballot:start_next_batch' poll_details.id %}" target="_self" class="btn btn-outline-secondary"><i class="dropdown-icon fe fe-plus"></i><b>Start Next Batch</b></a>
       </h1>
     </div>
     <div class="row row-cards row-deck">
@@ -39,14 +40,14 @@ td.status > .dropdown-icon {
                 {% for item in poll_details.items %}
                 <tr>
                   <td>
-                    <div>{{ forloop.counter }}. {{ item.text }}</div>
+                    <div>{{ forloop.counter }}. {{ item.text }} (By {% if item.type == 1 %}Share{% endif %}{% if item.type == 2 %}Lot{% endif %})</div>
                   </td>
-                  <td class="text-center status">
+                  <td class="text-left status">
                     <i class="dropdown-icon fa fa-smile-o"></i>{{ item.result.smile }}
                     <i class="dropdown-icon fa fa-meh-o"></i>{{ item.result.meh }}
                     <i class="dropdown-icon fa fa-frown-o"></i>{{ item.result.frown }}
                     &nbsp;&nbsp;
-                    <i class="dropdown-icon fa fa-user-times"></i>{{ item.result.miss }}
+                    <i class="dropdown-icon fa fa-user-times"></i>{{ item.result.miss }}{% if item.type == 2 %}&nbsp;({{ item.proxy_users }}){% endif %}
                   </td>
                   <td class="text-center">
                     {% if item.is_open %}
@@ -72,6 +73,24 @@ td.status > .dropdown-icon {
   require(['jquery'], function () {
     $(".nav-link").removeClass("active");
     $(".nav-link.live_voting").addClass("active");
+
+    {% if has_voting_opened %}
+    var check_seconds_left = setInterval(function() {
+      $.get("{% url 'ballot:live_voting_openning_json' %}",
+        function(ret) {
+          // console.log("live_voting", ret);
+          $("#time_label").text("Time Left: " + ret["opening_seconds_left"] + " seconds");
+          if (parseInt(ret["opening_seconds_left"], 10) == 0)
+          {
+            window.location.reload(true);
+          }
+          else if (parseInt(ret["opening_seconds_left"], 10) == -1) {
+            clearInterval(check_seconds_left);
+          }
+        }
+      );
+    }, 1000);
+    {% endif %}
   });
 </script>
 {% endblock javascripts %}
