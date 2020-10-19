@@ -18,6 +18,7 @@ urlpatterns = [
     path('<int:survey_id>/vote/', views.survey_vote, name='survey_vote'),
     path('survery_vote_done/<int:survey_id>/<int:survey_option_id>/', views.survery_vote_done, name='survery_vote_done'),
     path('live_voting/', views.live_voting, name='live_voting'),
+    path('start_next_batch/<int:poll_id>/', views.start_next_batch, name='start_next_batch'),
     path('cur_live_voting/', views.cur_live_voting, name='cur_live_voting'),
     path('open_live_voting/<int:poll_item_id>/', views.open_live_voting, name='open_live_voting'),
     path('close_live_voting/<int:poll_item_id>/', views.close_live_voting, name='close_live_voting'),

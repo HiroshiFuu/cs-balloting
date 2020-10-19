@@ -19,13 +19,17 @@ from .models import LivePoll
 from .models import LivePollItem
 from .models import LivePollItemVote
 from .models import LivePollResult
+from .models import LivePollProxy
+from .models import LivePollBatch
 
 from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
+from .constants import POLL_TYPE_BY_LOT
 
 from django.db.models import Count
 from django.db.models import Sum
+from django.db.models import Q
 
 from collections import defaultdict
 from datetime import date
@@ -48,35 +52,94 @@ def pages(request):
         return HttpResponse(html_template.render(context, request))
 
 
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def get_client_agent(request):
+    # Let's assume that the visitor uses an iPhone...
+    # request.user_agent.is_mobile # returns True
+    # request.user_agent.is_tablet # returns False
+    # request.user_agent.is_touch_capable # returns True
+    # request.user_agent.is_pc # returns False
+    # request.user_agent.is_bot # returns False
+
+    # # Accessing user agent's browser attributes
+    # request.user_agent.browser  # returns Browser(family=u'Mobile Safari', version=(5, 1), version_string='5.1')
+    # request.user_agent.browser.family  # returns 'Mobile Safari'
+    # request.user_agent.browser.version  # returns (5, 1)
+    # request.user_agent.browser.version_string   # returns '5.1'
+
+    # # Operating System properties
+    # request.user_agent.os  # returns OperatingSystem(family=u'iOS', version=(5, 1), version_string='5.1')
+    # request.user_agent.os.family  # returns 'iOS'
+    # request.user_agent.os.version  # returns (5, 1)
+    # request.user_agent.os.version_string  # returns '5.1'
+
+    # # Device properties
+    # request.user_agent.device  # returns Device(family='iPhone')
+    # request.user_agent.device.family  # returns 'iPhone'
+    return str(request.user_agent.browser) + ' ' + str(request.user_agent.os) + ' ' + str(request.user_agent.device)
+
+
+@login_required(login_url='/login/')
+def start_next_batch(request, poll_id):
+    print('start_next_batch', poll_id)
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        poll = LivePoll.objects.get(id=poll_id)
+        batch = LivePollBatch.objects.filter(poll=poll).order_by('-batch_no').first()
+        if batch is None:
+            LivePollBatch.objects.create(poll=poll, batch_no=1)
+        else:
+            LivePollBatch.objects.create(poll=poll, batch_no=batch.batch_no+1)
+    return HttpResponseRedirect(reverse('ballot:live_voting', args=()))
+
+
 @login_required(login_url='/login/')
 def live_voting(request):
     if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
-        poll = LivePoll.objects.all().filter(company=request.user.company, is_chosen=True).first()
+        user_company = request.user.company
+        poll = LivePoll.objects.filter(company=user_company, is_chosen=True).first()
         poll_details = {}
         if poll:
-            count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=request.user.company, is_active=True))
+            count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True))
+            poll_details['id'] = poll.id
             poll_details['title'] = poll.title
-            LivePollItems = LivePollItem.objects.filter(poll=poll)
+            batch = LivePollBatch.objects.filter(poll=poll).order_by('-batch_no').first()
             items = []
             has_voting_opened = False
-            for poll_item in LivePollItems:
-                item = {}
-                item['id'] = poll_item.id
-                item['text'] = poll_item.text
-                item['is_open'] = poll_item.is_open
-                item_result = {}
-                smile_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1))
-                item_result['smile'] = smile_count
-                meh_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2))
-                item_result['meh'] = meh_count
-                frown_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3))
-                item_result['frown'] = frown_count
-                item_result['miss'] = count_users - smile_count - meh_count - frown_count
-                item['result'] = item_result
-                items.append(item)
-                if poll_item.is_open:
-                    has_voting_opened = True
+            if batch is not None:
+                batch_no = batch.batch_no
+                poll_items = LivePollItem.objects.filter(poll=poll)
+                for poll_item in poll_items:
+                    item = {}
+                    item['id'] = poll_item.id
+                    item['text'] = poll_item.text
+                    item['is_open'] = poll_item.is_open
+                    item['type'] = poll_item.poll_type
+                    item_result = {}
+                    smile_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch))
+                    item_result['smile'] = smile_count
+                    meh_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch))
+                    item_result['meh'] = meh_count
+                    frown_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch))
+                    item_result['frown'] = frown_count
+                    item_result['miss'] = count_users - smile_count - meh_count - frown_count
+                    item['result'] = item_result                    
+                    if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                        item['proxy_users'] = 0
+                        for proxy_user in LivePollProxy.objects.filter(main_user__company=user_company, poll_batch=batch):
+                            item['proxy_users'] += proxy_user.proxy_users.count()
+                    items.append(item)
+                    if poll_item.is_open:
+                        has_voting_opened = True
             poll_details['items'] = items
+            poll_details['batch_no'] = batch_no
             # print('poll_details', poll_details)
         return render(request, 'live_voting.html', {'poll_details': poll_details, 'has_voting_opened': has_voting_opened})
     else:
@@ -90,10 +153,14 @@ def live_voting(request):
 def cur_live_voting(request):
     poll_item = LivePollItem.objects.all().filter(poll__company=request.user.company, is_open=True).first()
     if poll_item is not None:
-        opening_seconds_left = poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds()
-        if opening_seconds_left <= 0:
-            poll_item.is_open = False
-            poll_item.save()
+        batch = LivePollBatch.objects.filter(poll=poll_item.poll).order_by('-batch_no').first()
+        if batch is not None:
+            opening_seconds_left = poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds()
+            if opening_seconds_left <= 0:
+                poll_item.is_open = False
+                poll_item.save()
+                poll_item = None
+        if LivePollItemVote.objects.filter(poll_item=poll_item, poll_batch=batch):
             poll_item = None
     return render(request, 'cur_live_voting.html', {'poll_item': poll_item})
 
@@ -126,6 +193,9 @@ def live_voting_openning_json(request):
         opening_seconds_left = int(poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds())
         if opening_seconds_left < 0:
             opening_seconds_left = 0
+        if opening_seconds_left == 0 and poll_item.is_open:
+            poll_item.is_open = False
+            poll_item.save()
         opening_data = {
             'poll_item_id': poll_item.pk,
             'opened_at': poll_item.opened_at,
@@ -147,8 +217,10 @@ def live_poll_vote(request, live_poll_id):
         # print(request.user.weight)
         vote = LivePollItemVote.objects.filter(user=request.user, poll_item=live_poll, vote_option=live_poll_option).first()
         if vote is None:
-            LivePollItemVote.objects.create(user=request.user, poll_item=live_poll, vote_option=live_poll_option)
-            compute_live_poll_voting_result(live_poll)
+            # print(get_client_ip(request), get_client_agent(request))
+            batch = LivePollBatch.objects.filter(poll=live_poll.poll).order_by('-batch_no').first()
+            LivePollItemVote.objects.create(user=request.user, poll_item=live_poll, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request), poll_batch=batch)
+            # compute_live_poll_voting_result(live_poll)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
         else:
             print('Something Wrong', 'live_poll vote', live_poll_id)
@@ -179,12 +251,13 @@ def compute_live_poll_voting_result(live_poll):
 @login_required(login_url='/login/')
 def dashboard(request):
     if (request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY) or request.user.is_superuser:
+        user_company = request.user.company
         if request.user.is_superuser:
             surveys = Survey.objects.all()
         else:
-            surveys = Survey.objects.all().filter(company=request.user.company)
+            surveys = Survey.objects.all().filter(company=user_company)
         surveys_details = []
-        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=request.user.company, is_active=True))
+        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id
@@ -238,7 +311,28 @@ def dashboard(request):
             }
         # print(survey_chart_data)
         survey_votings = SurveyVote.objects.all()
-        return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings})
+        live_poll_votings = []
+        for vote in LivePollItemVote.objects.filter(poll_item__poll__company=user_company, poll_item__poll__is_chosen=True).order_by('poll_batch', 'poll_item__order'):
+            voting_detail = {}
+            voting_detail['id'] = vote.id
+            voting_detail['batch_no'] = vote.poll_batch.batch_no
+            voting_detail['item'] = vote.poll_item.text
+            voting_detail['option'] = vote.vote_option
+            voting_detail['created_at'] = vote.created_at
+            voting_detail['username'] = vote.user.username
+            live_poll_votings.append(voting_detail)
+            if vote.poll_item.poll_type == POLL_TYPE_BY_LOT:
+                for user in LivePollProxy.objects.get(main_user=vote.user).proxy_users.all():
+                    voting_detail = {}
+                    voting_detail['id'] = vote.id
+                    voting_detail['batch_no'] = vote.poll_batch.batch_no
+                    voting_detail['item'] = vote.poll_item.text
+                    voting_detail['option'] = vote.vote_option
+                    voting_detail['created_at'] = vote.created_at
+                    voting_detail['username'] = user.username + '(' + vote.user.username + ')'
+                    live_poll_votings.append(voting_detail)
+        print('live_poll_votings', live_poll_votings)
+        return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings, 'live_poll_votings': live_poll_votings})
     else:
         return HttpResponseRedirect(reverse('ballot:surveys', args=()))
 
