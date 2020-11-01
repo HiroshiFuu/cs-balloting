@@ -316,7 +316,10 @@ def dashboard(request):
         for vote in LivePollItemVote.objects.filter(poll_item__poll__company=user_company, poll_item__poll__is_chosen=True).order_by('poll_batch', 'poll_item__order'):
             voting_detail = {}
             voting_detail['id'] = vote.id
-            voting_detail['batch_no'] = vote.poll_batch.batch_no
+            if vote.poll_batch:
+                voting_detail['batch_no'] = vote.poll_batch.batch_no
+            else:
+                voting_detail['batch_no'] = None
             voting_detail['item'] = vote.poll_item.text
             voting_detail['option'] = vote.vote_option
             voting_detail['created_at'] = vote.created_at
