@@ -113,6 +113,7 @@ def live_voting(request):
             batch = LivePollBatch.objects.filter(poll=poll).order_by('-batch_no').first()
             items = []
             has_voting_opened = False
+            batch_no = None
             if batch is not None:
                 batch_no = batch.batch_no
                 poll_items = LivePollItem.objects.filter(poll=poll)
