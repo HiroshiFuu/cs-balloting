@@ -152,6 +152,12 @@ class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
             return qs
         return qs.filter(poll__company=request.user.company)
 
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return super(LivePollMultipleAdmin, self).get_readonly_fields(request, obj)
+        else:
+            return ('is_open', 'opened_at')
+
 
 @admin.register(LivePollItemVote)
 class LivePollItemVoteAdmin(ImportExportModelAdmin):
