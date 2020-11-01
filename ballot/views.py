@@ -326,15 +326,17 @@ def dashboard(request):
             voting_detail['username'] = vote.user.username
             live_poll_votings.append(voting_detail)
             if vote.poll_item.poll_type == POLL_TYPE_BY_LOT:
-                for user in LivePollProxy.objects.get(main_user=vote.user).proxy_users.all():
-                    voting_detail = {}
-                    voting_detail['id'] = vote.id
-                    voting_detail['batch_no'] = vote.poll_batch.batch_no
-                    voting_detail['item'] = vote.poll_item.text
-                    voting_detail['option'] = vote.vote_option
-                    voting_detail['created_at'] = vote.created_at
-                    voting_detail['username'] = user.username + '(' + vote.user.username + ')'
-                    live_poll_votings.append(voting_detail)
+                proxy = LivePollProxy.objects.get(main_user=vote.user)
+                if proxy:
+                    for user in proxy.proxy_users.all():
+                        voting_detail = {}
+                        voting_detail['id'] = vote.id
+                        voting_detail['batch_no'] = vote.poll_batch.batch_no
+                        voting_detail['item'] = vote.poll_item.text
+                        voting_detail['option'] = vote.vote_option
+                        voting_detail['created_at'] = vote.created_at
+                        voting_detail['username'] = user.username + '(' + vote.user.username + ')'
+                        live_poll_votings.append(voting_detail)
         print('live_poll_votings', live_poll_votings)
         return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings, 'live_poll_votings': live_poll_votings})
     else:
