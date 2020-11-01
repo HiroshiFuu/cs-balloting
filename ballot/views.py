@@ -173,7 +173,7 @@ def open_live_voting(request, poll_item_id):
         poll_item.poll.items.update(is_open=False)
         poll_item.is_open = True
         poll_item.opened_at = datetime.now()
-        poll_item.opening_duration_minustes = 5
+        # poll_item.opening_duration_minustes = 5
         poll_item.save()
     return HttpResponseRedirect(reverse('ballot:live_voting', args=()))
 

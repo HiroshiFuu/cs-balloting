@@ -86,6 +86,7 @@
             window.location.reload(true);
           }
           else if (parseInt(ret["opening_seconds_left"], 10) == -1) {
+            window.location.reload(true);
             clearInterval(check_seconds_left);
           }
         }
