@@ -326,7 +326,7 @@ def dashboard(request):
             voting_detail['username'] = vote.user.username
             live_poll_votings.append(voting_detail)
             if vote.poll_item.poll_type == POLL_TYPE_BY_LOT:
-                proxy = LivePollProxy.objects.get(main_user=vote.user)
+                proxy = LivePollProxy.objects.filter(main_user=vote.user).first()
                 if proxy:
                     for user in proxy.proxy_users.all():
                         voting_detail = {}
