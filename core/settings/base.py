@@ -32,6 +32,7 @@ DJANGO_APPS = [
 LOCAL_APPS = [ # Enable the inner app
     'authentication',
     'ballot',
+    'live_poll_multiple',
 ]
 
 THIRD_PARTY_APPS = [
