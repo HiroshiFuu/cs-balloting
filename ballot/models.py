@@ -2,6 +2,7 @@
 
 from django.db import models
 from django.conf import settings
+from django.dispatch import receiver
 
 from core.models import LogMixin
 
@@ -88,7 +89,7 @@ class LivePollItem(LogMixin):
     text = models.CharField(max_length=255)
     is_open = models.BooleanField('Is Open', default=False)
     opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
-    opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', null=True, blank=True)
+    opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', default=5)
     poll_type = models.PositiveSmallIntegerField('Poll Type', choices=POLL_TYPES, default=1)
 
     class Meta:
@@ -159,3 +160,17 @@ class LivePollResult(LogMixin):
 
     def __str__(self):
         return '{}: {}'.format(self.live_poll, self.result)
+
+
+@receiver(models.signals.post_save, sender=LivePollItem)
+def auto_initiate_order_after_save(sender, instance, created, **kwargs):
+    """
+    Initiate LivePollItem order when object is saved.
+    """
+    print('auto_initiate_order_after_save LivePollItem', created)
+    if created:
+        order_offset = instance.poll.id * 100
+        cur_order = instance.poll.items.all().count()
+        print('order_offset cur_order', order_offset, cur_order)
+        instance.order = order_offset + cur_order
+        instance.save()
