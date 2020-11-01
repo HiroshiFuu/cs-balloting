@@ -10,6 +10,7 @@ urlpatterns = [
     # path('accounts/', include('allauth.urls')),
     path('', include('authentication.urls')),
     path('', include('ballot.urls')),
+    path('', include('live_poll_multiple.urls')),
 ]
 
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
