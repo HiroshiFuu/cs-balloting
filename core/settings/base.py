@@ -200,7 +200,7 @@ SUIT_CONFIG = {
     'MENU': (
         {'app': 'authentication', 'label': 'Authentication and Authentication', 'icon':'icon-lock', 'models': ('authuser', 'authgroup', 'company')},
         {'app': 'ballot'},
-        {'app': 'live_poll_multiple'},
+        {'app': 'live_poll_multiple', 'label': 'Live Poll Multiple'},
         'sites',
     ),
 
