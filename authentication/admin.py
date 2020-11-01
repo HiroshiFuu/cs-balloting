@@ -53,7 +53,7 @@ class AuthUserAdmin(UserAdmin):
     ordering = ('username',)
     list_display_links = ('username',)
     fieldsets = (
-        (None, {'fields': ['username', 'weight', 'company', 'is_company_user']}),
+        (None, {'fields': ['username', 'weight', 'company']}),
         ('Personal info', {'fields': ('first_name', 'last_name')}),
         ('Permissions', {'fields': [
          'groups', 'is_staff', 'is_active', 'password']}),
