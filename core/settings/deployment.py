@@ -5,9 +5,9 @@ SECRET_KEY = 'za#q^j+$6frru&3*)b0yl=#9wmue%rf38akqux(fjvl-&zy@_l'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['118.201.195.130']
+ALLOWED_HOSTS = ['118.201.195.130', 'eagm.cstechsolutions.com.sg']
 
-RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:8000'
+RUNSERVERPLUS_SERVER_ADDRESS_PORT = '118.201.195.130:8000'
 
 DATABASES = {
     'default': {
