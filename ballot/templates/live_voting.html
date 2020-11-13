@@ -75,27 +75,12 @@ td.status > .dropdown-icon {
     $(".nav-link.live_voting").addClass("active");
 
     {% if has_voting_opened %}
-    var need_to_reload = false;
     var check_seconds_left = setInterval(function() {
       $.get("{% url 'ballot:live_voting_openning_json' %}",
         function(ret) {
           // console.log("live_voting", ret);
           var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
           $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
-          if (opening_seconds_left > 0) {
-            need_to_reload = true;
-          }
-          else if (opening_seconds_left == 0) {
-            window.location.reload(true);
-          }
-          else if (opening_seconds_left == -1) {
-            if (need_to_reload) {
-              window.location.reload(true);
-            }
-            else {
-              clearInterval(check_seconds_left);
-            }
-          }
         }
       );
     }, 1000);
