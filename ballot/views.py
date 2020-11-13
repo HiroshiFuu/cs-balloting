@@ -249,7 +249,7 @@ def live_poll_vote(request, live_poll_id):
         live_poll_option = int(request.POST['live_poll_option'])
         # print(live_poll_option)
         # print(request.user.weight)
-        vote = LivePollItemVote.objects.filter(user=request.user, poll_item=live_poll, vote_option=live_poll_option).first()
+        vote = LivePollItemVote.objects.filter(user=request.user, poll_item=live_poll, vote_option=live_poll_option, poll_batch=batch).first()
         if vote is None:
             # print(get_client_ip(request), get_client_agent(request))
             batch = LivePollBatch.objects.filter(poll=live_poll.poll).order_by('-batch_no').first()
