@@ -169,6 +169,7 @@ def live_voting(request):
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
                         for proxy_user in LivePollProxy.objects.filter(main_user__company=user_company, poll_batch=batch):
                             item['addon'] += proxy_user.proxy_users.count()
+                    item['miss_addon'] = item['addon'] - for_addon_count - abstain_addon_count - against_addon_count
                     items.append(item)
                     if poll_item.is_open:
                         has_voting_opened = True
