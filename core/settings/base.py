@@ -6,6 +6,7 @@ import os
 
 CORE_DIR = environ.Path(__file__) - 2 # core/settings/base.py - 2 = core/
 PROJECT_DIR = CORE_DIR - 1
+environ.Env.read_env(PROJECT_DIR('.env'))  # reading .env file
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='S#perS3crEt_1122')

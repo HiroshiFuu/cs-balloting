@@ -1,4 +1,5 @@
-# Overrides
+# -*- encoding: utf-8 -*-
+
 from .base import *  # noqa: F401
 
 SECRET_KEY = 'za#q^j+$6frru&3*)b0yl=#9wmue%rf38akqux(fjvl-&zy@_l'
@@ -11,11 +12,17 @@ RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:80'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'local.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DATABASE_NAME'),
+        'USER': os.environ.get('DATABASE_USER'),
+        'PASSWORD': os.environ.get('DATABASE_PASSWORD'),
+        'HOST': os.environ.get('DATABASE_HOST'),
+        'PORT': os.environ.get('DATABASE_PORT'),
+        'OPTIONS': {
+            'sql_mode': 'strict_trans_tables',
+        }
     }
 }
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
