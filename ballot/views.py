@@ -194,7 +194,7 @@ def cur_live_voting(request):
                 poll_item.is_open = False
                 poll_item.save()
                 poll_item = None
-        if LivePollItemVote.objects.filter(poll_item=poll_item, poll_batch=batch):
+        if LivePollItemVote.objects.filter(user=request.user, poll_item=poll_item, poll_batch=batch):
             poll_item = None
     return render(request, 'cur_live_voting.html', {'poll_item': poll_item})
 
