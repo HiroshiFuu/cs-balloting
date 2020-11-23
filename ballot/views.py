@@ -107,13 +107,13 @@ def live_voting(request):
         user_company = request.user.company
         poll = LivePoll.objects.filter(company=user_company, is_chosen=True).first()
         poll_details = {}
+        has_voting_opened = False
         if poll:
             count_users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True).count()
             poll_details['id'] = poll.id
             poll_details['title'] = poll.title
             batch = LivePollBatch.objects.filter(poll=poll).order_by('-batch_no').first()
             items = []
-            has_voting_opened = False
             batch_no = None
             if batch is not None:
                 batch_no = batch.batch_no
@@ -132,9 +132,9 @@ def live_voting(request):
                     for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch):
                         for_count = for_count + 1
                         if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                            for_addon_count = for_addon_count + vote.user.weight
+                            for_addon_count += vote.user.weight
                         if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            for_addon_count = for_addon_count + LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
+                            for_addon_count += LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
                     item_result['for'] = for_count
                     item_result['for_addon'] = for_addon_count
                     # abstain_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch))
@@ -143,9 +143,9 @@ def live_voting(request):
                     for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch):
                         abstain_count = abstain_count + 1
                         if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                            abstain_addon_count = abstain_addon_count + vote.user.weight
+                            abstain_addon_count += vote.user.weight
                         if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            abstain_addon_count = abstain_addon_count + LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
+                            abstain_addon_count += LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
                     item_result['abstain'] = abstain_count
                     item_result['abstain_addon'] = abstain_addon_count
                     # against_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch))
@@ -154,9 +154,9 @@ def live_voting(request):
                     for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch):
                         against_count = against_count + 1
                         if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                            against_addon_count = against_addon_count + vote.user.weight
+                            against_addon_count += vote.user.weight
                         if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            against_addon_count = against_addon_count + LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
+                            against_addon_count += LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).count()
                     item_result['against'] = against_count
                     item_result['against_addon'] = against_addon_count
 
@@ -165,7 +165,7 @@ def live_voting(request):
                     item['addon'] = 0
                     if poll_item.poll_type == POLL_TYPE_BY_SHARE:
                         for user in AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True):
-                            item['addon'] = item['addon'] + user.weight
+                            item['addon'] += user.weight
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
                         for proxy_user in LivePollProxy.objects.filter(main_user__company=user_company, poll_batch=batch):
                             item['addon'] += proxy_user.proxy_users.count()
