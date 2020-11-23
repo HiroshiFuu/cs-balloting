@@ -10,3 +10,6 @@ django-import-export
 django-admin-sortable2
 django-inline-actions
 django-user-agents
+pyOpenSSL
+# sudo apt-get install libmariadbclient-dev
+mysqlclient

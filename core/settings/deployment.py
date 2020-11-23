@@ -10,6 +10,8 @@ ALLOWED_HOSTS = ['118.201.195.130', 'eagm.cstechsolutions.com.sg']
 
 RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:80'
 
+SECURE_SSL_REDIRECT = True
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -23,6 +25,7 @@ DATABASES = {
         }
     }
 }
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
