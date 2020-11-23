@@ -21,7 +21,7 @@ td.status > .dropdown-icon {
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">
-        {{ poll_details.title }} Batch No. {{ poll_details.batch_no }} <a href="{% url 'ballot:start_next_batch' poll_details.id %}" target="_self" class="btn btn-outline-secondary"><i class="dropdown-icon fe fe-plus"></i><b>Start Next Batch</b></a>
+        {{ poll_details.title }} Batch No. {{ poll_details.batch_no }} <a href="{% url 'live_poll:start_next_batch' poll_details.id %}" target="_self" class="btn btn-outline-secondary"><i class="dropdown-icon fe fe-plus"></i><b>Start Next Batch</b></a>
       </h1>
     </div>
     <div class="row row-cards row-deck">
@@ -51,9 +51,9 @@ td.status > .dropdown-icon {
                   </td>
                   <td class="text-center">
                     {% if item.is_open %}
-                    <a href="{% url 'ballot:close_live_voting' item.id %}" target="_self" class="dropdown-item"><i class="dropdown-icon fe fe-disc"></i><b>Close Voting</b></a>
+                    <a href="{% url 'live_poll:close_live_voting' item.id %}" target="_self" class="dropdown-item"><i class="dropdown-icon fe fe-disc"></i><b>Close Voting</b></a>
                     {% else %}
-                    <a href="{% url 'ballot:open_live_voting' item.id %}" target="_self" class="dropdown-item {% if has_voting_opened %}disabled{% endif %}"><i class="dropdown-icon fe fe-check-circle"></i>Open Voting</a>
+                    <a href="{% url 'live_poll:open_live_voting' item.id %}" target="_self" class="dropdown-item {% if has_voting_opened %}disabled{% endif %}"><i class="dropdown-icon fe fe-check-circle"></i>Open Voting</a>
                     {% endif %}
                   </td>
                 </tr>
@@ -76,7 +76,7 @@ td.status > .dropdown-icon {
 
     {% if has_voting_opened %}
     var check_seconds_left = setInterval(function() {
-      $.get("{% url 'ballot:live_voting_openning_json' %}",
+      $.get("{% url 'live_poll:live_voting_openning_json' %}",
         function(ret) {
           // console.log("live_voting", ret);
           var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);

@@ -26,7 +26,7 @@
   <div class="container">
     <div class="row">
       <div class="col-12">
-        <form action="{% if poll_item %}{% url 'ballot:live_poll_vote' poll_item.id %}{% endif %}" method="post" class="card">
+        <form action="{% if poll_item %}{% url 'live_poll:live_poll_vote' poll_item.id %}{% endif %}" method="post" class="card">
           {% csrf_token %}
           <div class="card-header">
             <h3 class="card-title">{% if poll_item %}{{ poll_item.text }}{% else %}No poll is opened for voting now.{% endif %}</h3>
@@ -81,7 +81,7 @@
 
     var need_to_reload = false;
     var check_seconds_left = setInterval(function() {
-      $.get("{% url 'ballot:live_voting_openning_json' %}",
+      $.get("{% url 'live_poll:live_voting_openning_json' %}",
         function(ret) {
           console.log("cur_live_voting", ret);
           var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);

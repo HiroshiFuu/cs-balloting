@@ -32,8 +32,9 @@ DJANGO_APPS = [
 
 LOCAL_APPS = [ # Enable the inner app
     'authentication',
-    'ballot',
+    'live_poll',
     'live_poll_multiple',
+    'ballot',
 ]
 
 THIRD_PARTY_APPS = [
@@ -76,7 +77,8 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(CORE_DIR, 'templates'),
-            os.path.join(PROJECT_DIR, 'ballot' 'templates'),
+            os.path.join(PROJECT_DIR, 'ballot', 'templates'),
+            os.path.join(PROJECT_DIR, 'live_poll', 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -201,6 +203,7 @@ SUIT_CONFIG = {
     'MENU': (
         {'app': 'authentication', 'label': 'Authentication and Authentication', 'icon':'icon-lock', 'models': ('authuser', 'authgroup', 'company')},
         {'app': 'ballot'},
+        {'app': 'live_poll', 'label': 'Live Poll'},
         {'app': 'live_poll_multiple', 'label': 'Live Poll Multiple'},
         'sites',
     ),
