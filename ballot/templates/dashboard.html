@@ -71,7 +71,7 @@
                     <div class="item-action dropdown">
                       <a href="javascript:void(0)" data-toggle="dropdown" class="icon"><i class="fe fe-more-vertical"></i></a>
                       <div class="dropdown-menu dropdown-menu-right">
-                        <a href="#" class="dropdown-item stats_link" data-url="{% url 'ballot:voting_result_json' survey_details.id %}"><i class="dropdown-icon fe fe-eye"></i>Show Stats</a>
+                        <a href="#" class="dropdown-item stats_link" data-url="{% url 'survey:voting_result_json' survey_details.id %}"><i class="dropdown-icon fe fe-eye"></i>Show Stats</a>
                         <a href="{% url 'admin:ballot_survey_change' survey_details.id %}" target="_blank" class="dropdown-item"><i class="dropdown-icon fe fe-edit"></i>Manage</a>
                       </div>
                     </div>

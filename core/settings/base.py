@@ -32,6 +32,7 @@ DJANGO_APPS = [
 
 LOCAL_APPS = [ # Enable the inner app
     'authentication',
+    'survey',
     'live_poll',
     'live_poll_multiple',
     'ballot',
@@ -78,7 +79,9 @@ TEMPLATES = [
         'DIRS': [
             os.path.join(CORE_DIR, 'templates'),
             os.path.join(PROJECT_DIR, 'ballot', 'templates'),
+            os.path.join(PROJECT_DIR, 'survey', 'templates'),
             os.path.join(PROJECT_DIR, 'live_poll', 'templates'),
+            os.path.join(PROJECT_DIR, 'live_poll_multiple', 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -184,7 +187,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(PROJECT_DIR, 'password_reset_emails')
 
 SUIT_CONFIG = {
-    'ADMIN_NAME': 'Django Suit',
+    'ADMIN_NAME': 'E-AGM',
     'HEADER_DATE_FORMAT': 'l, j. F Y',
     'HEADER_TIME_FORMAT': 'H:i:s',
 
@@ -202,7 +205,8 @@ SUIT_CONFIG = {
     # 'MENU_EXCLUDE': ('auth.group', 'auth'),
     'MENU': (
         {'app': 'authentication', 'label': 'Authentication and Authentication', 'icon':'icon-lock', 'models': ('authuser', 'authgroup', 'company')},
-        {'app': 'ballot'},
+        # {'app': 'ballot', 'label': 'Ballot'},
+        {'app': 'survey', 'label': 'Survey'},
         {'app': 'live_poll', 'label': 'Live Poll'},
         {'app': 'live_poll_multiple', 'label': 'Live Poll Multiple'},
         'sites',

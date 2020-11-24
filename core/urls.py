@@ -10,6 +10,7 @@ urlpatterns = [
     # path('accounts/', include('allauth.urls')),
     path('', include('authentication.urls')),
     path('', include('ballot.urls')),
+    path('', include('survey.urls')),
     path('', include('live_poll.urls')),
     path('', include('live_poll_multiple.urls')),
 ]
