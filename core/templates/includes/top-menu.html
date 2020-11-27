@@ -10,6 +10,9 @@
           <li class="nav-item">
             <a href="{% url 'live_poll:live_voting' %}" class="nav-link live_voting"><i class="fe fe-check-square"></i>Live Voting</a>
           </li>
+          <li class="nav-item">
+            <a href="{% url 'live_poll_multiple:live_voting_multiple' %}" class="nav-link live_voting_multiple"><i class="fe fe-check-square"></i>Live Voting Multiple</a>
+          </li>
           {% endif %}
           {% if not request.user.is_staff %}
           <li class="nav-item">

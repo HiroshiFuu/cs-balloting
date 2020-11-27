@@ -1,0 +1,84 @@
+{% extends "layouts/base.html" %}
+{% block title %} Live Voting {% endblock %}
+{% block styles %}
+<style>
+  a.disabled {
+    pointer-events: none;
+    color: #ccc;
+}
+td.status {
+  font-size: 20px;
+  padding-left: 2rem;
+}
+td.status > .dropdown-icon {
+  margin-left: 1rem;
+  margin-right: 0.5rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="my-12 my-md-12">
+  <div class="container">
+    <div class="page-header">
+      <h1 class="page-title">
+        Live Voting Multiple
+      </h1>
+    </div>
+    <div class="row row-cards row-deck">
+      <div class="col-12">
+        <div class="card">
+          <div class="table-responsive">
+            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+              <thead>
+                <tr>
+                  <th>Poll</th>
+                  <th class="text-center">Voting Status</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for poll_details in polls_details %}
+                <tr>
+                  <td>
+                    <div>Batch No. {{ poll_details.batch_no }} ({{ poll_details.threshold }})</div>
+                  </td>
+                  <td class="text-left status">
+                    {% for item in poll_details.items %}
+                    {{ item.text }}:&nbsp;{{ item.votes }} ({{ item.votes_addon }})&nbsp;&nbsp;
+                    {% endfor %}
+                    &nbsp;&nbsp;
+                    <i class="dropdown-icon fa fa-user-times"></i>{{ poll_details.miss }}&nbsp;({{ poll_details.miss_addon }})
+                  </td>
+                  <td class="text-center">
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script type="text/javascript">
+require(['jquery'], function() {
+  $(".nav-link").removeClass("active");
+  $(".nav-link.live_voting_multiple").addClass("active");
+
+  { % if has_voting_opened % }
+  var check_seconds_left = setInterval(function() {
+    $.get("{% url 'live_poll_multiple:live_voting_openning_json' %}",
+      function(ret) {
+        // console.log("live_voting_multiple", ret);
+        var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
+        $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+      }
+    );
+  }, 1000); { % endif % }
+});
+</script>
+{% endblock javascripts %}
