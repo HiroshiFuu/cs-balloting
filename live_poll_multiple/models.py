@@ -14,7 +14,8 @@ class LivePollMultiple(LogMixin):
     is_open = models.BooleanField('Is Open', default=False)
     opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
     opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', default=5)
-    batch_no = models.PositiveIntegerField('Batch No.')
+    batch_no = models.PositiveIntegerField('Batch No.', unique=True)
+    threshold = models.PositiveIntegerField('Threshold')
 
     class Meta:
         managed = True
@@ -22,7 +23,7 @@ class LivePollMultiple(LogMixin):
         verbose_name_plural = 'Live Poll Multiples'
 
     def __str__(self):
-        return '{}: {}'.format(self.company, self.batch_no)
+        return '{}: {} ({})'.format(self.company, self.batch_no, self.threshold)
 
 
 class LivePollMultipleItem(LogMixin):
@@ -37,7 +38,7 @@ class LivePollMultipleItem(LogMixin):
         ordering = ['live_poll__pk', 'text']
 
     def __str__(self):
-        return '{}: {}.{}'.format(self.live_poll, self.text)
+        return '{}: {}'.format(self.live_poll, self.text)
 
 
 class LivePollMultipleItemVote(LogMixin):
