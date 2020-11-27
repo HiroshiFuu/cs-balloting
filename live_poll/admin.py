@@ -13,6 +13,8 @@ from .models import LivePollProxy
 from .models import LivePollResult
 from .models import LivePollBatch
 
+from authentication.constants import USER_TYPE_COMPANY
+
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
 
