@@ -44,6 +44,9 @@ class AuthUser(AbstractUser):
         'User Type', choices=USER_TYPES, null=True)
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, null=True, blank=True)
+    phone_no = models.CharField('Phone Number', max_length=31, null=True, blank=True)
+    block_no = models.CharField('Block Number', max_length=7, null=True, blank=True)
+    unit_no = models.CharField('Unit Number', max_length=15, null=True, blank=True)
 
     class Meta:
         managed = True

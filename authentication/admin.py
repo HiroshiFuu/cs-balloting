@@ -49,19 +49,19 @@ class AuthGroupAdmin(GroupAdmin):
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company', 'username', 'weight', 'is_company_user', 'is_active']
+    list_display = ['company', 'username', 'weight', 'phone_no', 'block_no', 'unit_no', 'is_company_user', 'is_active']
     ordering = ('username',)
     list_display_links = ('username',)
     fieldsets = (
         (None, {'fields': ['username', 'weight', 'user_type', 'company']}),
-        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_no', 'block_no', 'unit_no')}),
         ('Permissions', {'fields': [
          'groups', 'is_staff', 'is_active', 'password']}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ['username', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
+            'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
          ),
     )
 
@@ -88,7 +88,7 @@ class AuthUserAdmin(UserAdmin):
                 fieldsets = copy.deepcopy(self.fieldsets)
             else:
                 fieldsets = (
-                    (None, {'fields': ['username', 'weight', 'company']}),
+                    (None, {'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'company']}),
                     ('Permissions', {'fields': ['is_active', 'password']}),
                 )
         else:
@@ -98,7 +98,7 @@ class AuthUserAdmin(UserAdmin):
             else:
                 self.add_form = CustomUserCreationForm
                 fieldsets = (
-                    (None, {'fields': ['username', 'weight', 'password1', 'password2']}),
+                    (None, {'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'password1', 'password2']}),
                 )
         # print('get_fieldsets', fieldsets)
         return fieldsets
