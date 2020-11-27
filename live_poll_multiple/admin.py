@@ -78,13 +78,12 @@ class LivePollMultipleItemVoteAdmin(ImportExportModelAdmin):
     list_display = [
         'user',
         'live_poll_item',
-        'vote_option',
         'ip_address',
         'user_agent',
         'created_at',
     ]
     list_filter = ['live_poll_item__live_poll']
-    search_fields = ['user__username', 'live_poll_item__text', 'live_poll_item__poll_title', 'poll_batch__batch_no']
+    search_fields = ['user__username', 'live_poll_item__text', 'live_poll_item__poll_title']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
 

@@ -46,7 +46,6 @@ class LivePollMultipleItemVote(LogMixin):
     ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
     user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
     live_poll_item = models.ForeignKey(LivePollMultipleItem, related_name='multiple_item_votes', on_delete=models.PROTECT)
-    vote_option = models.PositiveSmallIntegerField('Vote Option')
 
     class Meta:
         managed = True
@@ -54,7 +53,7 @@ class LivePollMultipleItemVote(LogMixin):
         verbose_name_plural = 'Live Poll Multiple Item Votes'
 
     def __str__(self):
-        return '{}: {} {}'.format(self.live_poll_item, self.user, self.vote_option)
+        return '{}: {}'.format(self.live_poll_item, self.user)
 
 
 class LivePollMultipleProxy(LogMixin):
