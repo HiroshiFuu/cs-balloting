@@ -16,7 +16,8 @@ from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
 from survey.models import Survey, SurveyVote
-from live_poll.models import LivePollItemVote
+from live_poll.models import LivePollItemVote, LivePollProxy
+
 
 from .constants import POLL_TYPE_BY_SHARE
 from .constants import POLL_TYPE_BY_LOT
