@@ -9,6 +9,8 @@ from .models import LivePollMultipleItemVote
 from .models import LivePollMultipleProxy
 from .models import LivePollMultipleResult
 
+from authentication.constants import USER_TYPE_COMPANY
+
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
 
@@ -44,7 +46,13 @@ class LivePollMultipleAdmin(ImportExportModelAdmin):
         if request.user.is_superuser:
             return super(LivePollMultipleAdmin, self).get_readonly_fields(request, obj)
         else:
-            return ('batch_no', 'is_open', 'opened_at')
+            return ('is_open', 'opened_at', 'company')
+
+    def save_model(self, request, obj, form, change):
+        # print('save_model', obj, change)
+        if not change and request.user.user_type == USER_TYPE_COMPANY:
+            obj.company = request.user.company
+        super().save_model(request, obj, form, change)
 
 
 
@@ -75,6 +83,7 @@ class LivePollMultipleItemVoteAdmin(ImportExportModelAdmin):
         'user_agent',
         'created_at',
     ]
+    list_filter = ['live_poll_item__live_poll']
     search_fields = ['user__username', 'live_poll_item__text', 'live_poll_item__poll_title', 'poll_batch__batch_no']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
@@ -89,6 +98,7 @@ class LivePollMultipleItemVoteAdmin(ImportExportModelAdmin):
 @admin.register(LivePollMultipleProxy)
 class LivePollMultipleProxyAdmin(ImportExportModelAdmin):
     list_display = [
+        'live_poll',
         'main_user',
     ]
     filter_horizontal = ('proxy_users',)

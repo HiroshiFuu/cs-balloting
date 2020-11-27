@@ -42,6 +42,18 @@ class LivePollAdmin(ImportExportModelAdmin):
             return queryset
         return queryset.filter(company=request.user.company)
 
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return super(LivePollAdmin, self).get_readonly_fields(request, obj)
+        else:
+            return ('company', )
+
+    def save_model(self, request, obj, form, change):
+        # print('save_model', obj, change)
+        if not change and request.user.user_type == USER_TYPE_COMPANY:
+            obj.company = request.user.company
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(LivePollItem)
 class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
