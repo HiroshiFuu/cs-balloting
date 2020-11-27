@@ -29,8 +29,6 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.db.models import Q
 
-from collections import defaultdict
-from datetime import date
 from datetime import datetime
 
 
