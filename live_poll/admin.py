@@ -82,6 +82,7 @@ class LivePollItemVoteAdmin(ImportExportModelAdmin):
         'user_agent',
         'created_at',
     ]
+    list_filter = ['poll_batch', 'poll_item']
     search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title', 'poll_batch__batch_no']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
@@ -96,6 +97,7 @@ class LivePollItemVoteAdmin(ImportExportModelAdmin):
 @admin.register(LivePollProxy)
 class LivePollProxyAdmin(ImportExportModelAdmin):
     list_display = [
+        'poll_batch',
         'main_user',
     ]
     filter_horizontal = ('proxy_users',)
