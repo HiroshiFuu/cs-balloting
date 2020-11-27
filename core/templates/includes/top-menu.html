@@ -18,6 +18,9 @@
           <li class="nav-item">
             <a href="{% url 'live_poll:cur_live_voting' %}" class="nav-link cur_live_voting"><i class="fe fe-check-square"></i>Current Live Voting</a>
           </li>
+          <li class="nav-item">
+            <a href="{% url 'live_poll_multiple:cur_live_voting_multiple' %}" class="nav-link cur_live_voting_multiple"><i class="fe fe-check-square"></i>Current Live Voting Multiple</a>
+          </li>
           {% endif %}
           <li class="nav-item">
             <a href="{% url 'survey:surveys' %}" class="nav-link surveys"><i class="fe fe-check-circle"></i>Surveys</a>

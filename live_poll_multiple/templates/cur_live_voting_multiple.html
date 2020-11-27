@@ -1,0 +1,101 @@
+{% extends "layouts/base.html" %}
+{% block title %} Voting {% endblock %}
+{% block styles %}
+<style>
+.dropdown-icon {
+  margin-left: 0rem;
+  margin-right: 0rem;
+  font-size: 44px;
+}
+.selectgroup-pills .selectgroup-item {
+  margin-right: 2rem;
+  text-align: center;
+  font-size: 26px;
+}
+
+.time_label {
+  margin-left: 2rem;
+  margin-bottom: 0rem;
+  margin-top: 0.25rem;
+  font-size: 1.25rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="my-3 my-md-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <form action="{% if live_poll %}{% url 'live_poll_multiple:live_poll_multiple_vote' live_poll.id %}{% endif %}" method="post" class="card">
+          {% csrf_token %}
+          <div class="card-header">
+            <h3 class="card-title">{% if live_poll %}Batch No. {{ live_poll.batch_no }}{% else %}No poll is opened for voting now.{% endif %}</h3>
+          </div>
+          {% if live_poll %}
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-12 col-lg-12">
+                <div class="form-group">
+                  <div id="live_poll_items" class="selectgroup selectgroup-pills">
+                    {% for item in live_poll_items %}
+                    <label class="selectgroup-item">
+                      <input type="radio" id="option{{ item.id }}" name="live_poll_item" value="{{ item.id }}" class="selectgroup-input">
+                      <span class="selectgroup-button">{{ item.text }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="input-group">
+                  <button id="btnSubmit" type="submit" class="btn btn-primary" disabled="disabled">Submit Vote</button>
+                  <label id="time_label" class="time_label" for="btnSubmit"></label>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock content %}
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script type="text/javascript">
+  require(['jquery'], function () {
+    $(".nav-link").removeClass("active");
+    $(".nav-link.cur_live_voting_multiple").addClass("active");
+
+    $("#live_poll_items").change(function() {
+      if ($("#live_poll_items input[name='live_poll_item']:checked").val() !== null)
+        $("#btnSubmit").removeAttr("disabled");
+    });
+
+    var need_to_reload = false;
+    var check_seconds_left = setInterval(function() {
+      $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",
+        function(ret) {
+          console.log("cur_live_voting_multiple", ret);
+          var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
+          $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+          if (opening_seconds_left > 0) {
+            need_to_reload = true;
+          }
+          else if (opening_seconds_left == 0) {
+            window.location.reload(true);
+          }
+          else if (opening_seconds_left == -1) {
+            if (need_to_reload) {
+              window.location.reload(true);
+            }
+            else {
+              clearInterval(check_seconds_left);
+            }
+          }
+        }
+      );
+    }, 1000);
+  });
+</script>
+{% endblock javascripts %}

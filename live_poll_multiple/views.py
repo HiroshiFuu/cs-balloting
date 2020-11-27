@@ -21,6 +21,8 @@ from authentication.models import AuthUser
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
+from datetime import datetime
+
 # Create your views here.
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -45,8 +47,10 @@ def live_voting_multiple(request):
         count_users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True).count()
         for poll in polls:
             poll_details = {}
+            poll_details['id'] = poll.id
             poll_details['batch_no'] = poll.batch_no
             poll_details['threshold'] = poll.threshold
+            poll_details['is_open'] = poll.is_open
             items = []
             poll_items = poll.multiple_items.all()
             poll_details['miss'] = count_users
@@ -55,7 +59,6 @@ def live_voting_multiple(request):
                 poll_details['miss_addon'] += proxy_user.proxy_users.count()
             for poll_item in poll_items:
                 item = {}
-                item['id'] = poll_item.id
                 item['text'] = poll_item.text
                 votes = poll_item.multiple_item_votes.all()
                 item['votes'] = votes.count()
@@ -81,8 +84,25 @@ def live_voting_multiple(request):
 
 
 @login_required(login_url='/login/')
-def live_voting_openning_json(request):
-    live_poll = LivePollMultiple.objects.filter(poll__company=request.user.company, is_open=True).first()
+def cur_live_voting_multiple(request):
+    live_poll = LivePollMultiple.objects.filter(company=request.user.company, is_open=True).first()
+    live_poll_items = None
+    if live_poll is not None:
+        opening_seconds_left = live_poll.opening_duration_minustes * 60 - (datetime.now() - live_poll.opened_at).total_seconds()
+        if opening_seconds_left <= 0:
+            live_poll.is_open = False
+            live_poll.save()
+            live_poll = None
+        if LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item__live_poll=live_poll):
+            live_poll = None
+        if live_poll is not None:
+            live_poll_items = live_poll.multiple_items.all()
+    return render(request, 'cur_live_voting_multiple.html', {'live_poll': live_poll, 'live_poll_items': live_poll_items})
+
+
+@login_required(login_url='/login/')
+def live_voting_multiple_openning_json(request):
+    live_poll = LivePollMultiple.objects.filter(company=request.user.company, is_open=True).first()
     if live_poll:
         opening_seconds_left = int(live_poll.opening_duration_minustes * 60 - (datetime.now() - live_poll.opened_at).total_seconds())
         if opening_seconds_left < 0:
@@ -99,3 +119,46 @@ def live_voting_openning_json(request):
         return JsonResponse(opening_data)
     else:
         return JsonResponse({'opening_seconds_left': -1})
+
+
+@login_required(login_url='/login/')
+def open_live_voting_multiple(request, live_poll_id):
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        LivePollMultiple.objects.update(is_open=False)
+        live_poll = LivePollMultiple.objects.get(pk=live_poll_id)
+        live_poll.is_open = True
+        live_poll.opened_at = datetime.now()
+        # live_poll.opening_duration_minustes = 5
+        live_poll.save()
+    return HttpResponseRedirect(reverse('live_poll_multiple:live_voting_multiple', args=()))
+
+
+@login_required(login_url='/login/')
+def close_live_voting_multiple(request, live_poll_id):
+    if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
+        live_poll = LivePollMultiple.objects.get(pk=live_poll_id)
+        live_poll.is_open = False
+        live_poll.save()
+    return HttpResponseRedirect(reverse('live_poll_multiple:live_voting_multiple', args=()))
+
+
+@login_required(login_url='/login/')
+def live_poll_multiple_vote(request, live_poll_id):
+    live_poll = get_object_or_404(LivePollMultiple, pk=live_poll_id)
+    # print('live_poll_item', request.POST['live_poll_item'])
+    try:
+        live_poll_item_id = int(request.POST['live_poll_item'])
+        live_poll_item = LivePollMultipleItem.objects.get(id=live_poll_item_id)
+        # print(live_poll_item)
+        vote = LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item=live_poll_item).first()
+        if vote is None:
+            # print(get_client_ip(request), get_client_agent(request))
+            LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+            # compute_live_poll_voting_result(live_poll)
+            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+        else:
+            print('Something Wrong', 'live_poll_multiple vote', live_poll_id)
+            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+    except (KeyError, LivePollMultipleItem.DoesNotExist, LivePollMultipleItem.DoesNotExist):
+        return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+    return HttpResponseRedirect(reverse('live_poll_multiple:cur_live_voting_multiple', args=()))

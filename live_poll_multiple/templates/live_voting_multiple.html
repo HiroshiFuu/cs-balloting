@@ -50,6 +50,11 @@ td.status > .dropdown-icon {
                     <i class="dropdown-icon fa fa-user-times"></i>{{ poll_details.miss }}&nbsp;({{ poll_details.miss_addon }})
                   </td>
                   <td class="text-center">
+                    {% if poll_details.is_open %}
+                    <a href="{% url 'live_poll_multiple:close_live_voting_multiple' poll_details.id %}" target="_self" class="dropdown-item"><i class="dropdown-icon fe fe-disc"></i><b>Close Voting</b></a>
+                    {% else %}
+                    <a href="{% url 'live_poll_multiple:open_live_voting_multiple' poll_details.id %}" target="_self" class="dropdown-item {% if has_voting_opened %}disabled{% endif %}"><i class="dropdown-icon fe fe-check-circle"></i>Open Voting</a>
+                    {% endif %}
                   </td>
                 </tr>
                 {% endfor %}
@@ -71,7 +76,7 @@ require(['jquery'], function() {
 
   { % if has_voting_opened % }
   var check_seconds_left = setInterval(function() {
-    $.get("{% url 'live_poll_multiple:live_voting_openning_json' %}",
+    $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",
       function(ret) {
         // console.log("live_voting_multiple", ret);
         var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
