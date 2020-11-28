@@ -26,6 +26,8 @@ class LivePollMultipleAdmin(ImportExportModelAdmin):
     list_display = [
         'batch_no',
         'is_open',
+        'threshold',
+        'allocation',
         'opened_at',
         'opening_duration_minustes',
     ]

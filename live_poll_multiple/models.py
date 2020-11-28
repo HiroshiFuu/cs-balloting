@@ -16,6 +16,7 @@ class LivePollMultiple(LogMixin):
     opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', default=5)
     batch_no = models.PositiveIntegerField('Batch No.', unique=True)
     threshold = models.PositiveIntegerField('Threshold')
+    allocation = models.PositiveIntegerField('Allocation')
 
     class Meta:
         managed = True

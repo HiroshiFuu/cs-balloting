@@ -95,6 +95,12 @@ def cur_live_voting_multiple(request):
             live_poll = None
         if LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item__live_poll=live_poll):
             live_poll = None
+        print('cur_live_voting_multiple')
+        for item in live_poll.multiple_items.all():
+            print(item, item.multiple_item_votes.all().count())
+            if item.multiple_item_votes.all().count() > live_poll.threshold:
+                live_poll = None
+                break
         if live_poll is not None:
             live_poll_items = live_poll.multiple_items.all()
     return render(request, 'cur_live_voting_multiple.html', {'live_poll': live_poll, 'live_poll_items': live_poll_items})
