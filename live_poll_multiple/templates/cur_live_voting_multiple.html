@@ -39,7 +39,7 @@
                   <div id="live_poll_items" class="selectgroup selectgroup-pills">
                     {% for item in live_poll_items %}
                     <label class="selectgroup-item">
-                      <input type="checkbox" id="option{{ item.id }}" name="live_poll_item" value="{{ item.id }}" class="selectgroup-input">
+                      <input type="checkbox" id="option{{ item.id }}" name="live_poll_items" value="{{ item.id }}" class="selectgroup-input">
                       <span class="selectgroup-button">{{ item.text }}</span>
                     </label>
                     {% endfor %}

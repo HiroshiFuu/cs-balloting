@@ -93,14 +93,15 @@ def cur_live_voting_multiple(request):
             live_poll.is_open = False
             live_poll.save()
             live_poll = None
+        # print('cur_live_voting_multiple')
         if LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item__live_poll=live_poll):
             live_poll = None
-        print('cur_live_voting_multiple')
-        for item in live_poll.multiple_items.all():
-            print(item, item.multiple_item_votes.all().count())
-            if item.multiple_item_votes.all().count() > live_poll.threshold:
-                live_poll = None
-                break
+        else:
+            for item in live_poll.multiple_items.all():
+                print(item, item.multiple_item_votes.all().count())
+                if item.multiple_item_votes.all().count() > live_poll.threshold:
+                    live_poll = None
+                    break
         if live_poll is not None:
             live_poll_items = live_poll.multiple_items.all()
     return render(request, 'cur_live_voting_multiple.html', {'live_poll': live_poll, 'live_poll_items': live_poll_items})
@@ -153,14 +154,17 @@ def live_poll_multiple_vote(request, live_poll_id):
     live_poll = get_object_or_404(LivePollMultiple, pk=live_poll_id)
     # print('live_poll_item', request.POST['live_poll_item'])
     try:
-        live_poll_item_id = int(request.POST['live_poll_item'])
-        live_poll_item = LivePollMultipleItem.objects.get(id=live_poll_item_id)
-        # print(live_poll_item)
-        vote = LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item=live_poll_item).first()
+        vote = LivePollMultipleItemVote.objects.filter(user=request.user).first()
         if vote is None:
-            # print(get_client_ip(request), get_client_agent(request))
-            LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
-            # compute_live_poll_voting_result(live_poll)
+            live_poll_item_ids = request.POST.getlist('live_poll_items')
+            print('live_poll_multiple_vote', live_poll_item_ids)
+            for live_poll_item_id in live_poll_item_ids:
+                live_poll_item_id = int(live_poll_item_id)
+                live_poll_item = LivePollMultipleItem.objects.get(id=live_poll_item_id)
+                print(live_poll_item)
+                # print(get_client_ip(request), get_client_agent(request))
+                LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+                # compute_live_poll_voting_result(live_poll)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
         else:
             print('Something Wrong', 'live_poll_multiple vote', live_poll_id)
