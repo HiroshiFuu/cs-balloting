@@ -28,7 +28,7 @@ td.status > .dropdown-icon {
       <div class="col-12">
         <div class="card">
           <div class="table-responsive">
-            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+            <table class="table table-hover table-outline table-vcenter card-table">
               <thead>
                 <tr>
                   <th>Poll</th>
@@ -39,7 +39,7 @@ td.status > .dropdown-icon {
               <tbody>
                 {% for poll_details in polls_details %}
                 <tr>
-                  <td>
+                  <td class="text-nowrap">
                     <div>Batch No. {{ poll_details.batch_no }} ({{ poll_details.threshold }})</div>
                   </td>
                   <td class="text-left status">
@@ -74,16 +74,20 @@ require(['jquery'], function() {
   $(".nav-link").removeClass("active");
   $(".nav-link.live_voting_multiple").addClass("active");
 
-  { % if has_voting_opened % }
+  {% if has_voting_opened %}
   var check_seconds_left = setInterval(function() {
     $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",
       function(ret) {
-        // console.log("live_voting_multiple", ret);
+        console.log("live_voting_multiple", ret);
         var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
         $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+        if (opening_seconds_left <= 0) {
+          window.location.reload(true);
+        }
       }
     );
-  }, 1000); { % endif % }
+  }, 1000);
+  {% endif %}
 });
 </script>
 {% endblock javascripts %}

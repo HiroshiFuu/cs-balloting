@@ -28,7 +28,7 @@ td.status > .dropdown-icon {
       <div class="col-12">
         <div class="card">
           <div class="table-responsive">
-            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+            <table class="table table-hover table-outline table-vcenter card-table">
               <thead>
                 <tr>
                   <th>Item</th>
@@ -42,14 +42,14 @@ td.status > .dropdown-icon {
                   <td>
                     <div>{{ forloop.counter }}. {{ item.text }} (By {% if item.type == 1 %}Share{% endif %}{% if item.type == 2 %}Lot{% endif %})</div>
                   </td>
-                  <td class="text-left status">
+                  <td class="text-left status text-nowrap">
                     <b>For:</b>&nbsp;{{ item.result.for }}({{ item.result.for_addon }})&nbsp;&nbsp;
                     <b>Against:</b>&nbsp;{{ item.result.against }}({{ item.result.against_addon }})&nbsp;&nbsp;
                     <b>Abstain:</b>&nbsp;{{ item.result.abstain }}({{ item.result.abstain_addon }})&nbsp;&nbsp;
                     &nbsp;&nbsp;
                     <i class="dropdown-icon fa fa-user-times"></i>{{ item.result.miss }}&nbsp;({{ item.miss_addon }})
                   </td>
-                  <td class="text-center">
+                  <td class="text-center text-nowrap">
                     {% if item.is_open %}
                     <a href="{% url 'live_poll:close_live_voting' item.id %}" target="_self" class="dropdown-item"><i class="dropdown-icon fe fe-disc"></i><b>Close Voting</b></a>
                     {% else %}

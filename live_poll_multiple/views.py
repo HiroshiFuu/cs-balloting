@@ -74,7 +74,7 @@ def live_voting_multiple(request):
             polls_details.append(poll_details)
             if poll.is_open:
                 has_voting_opened = True
-        print('polls_details', polls_details)
+        # print('polls_details', polls_details)
         return render(request, 'live_voting_multiple.html', {'polls_details': polls_details, 'has_voting_opened': has_voting_opened})
     else:
         if request.user.is_superuser:
