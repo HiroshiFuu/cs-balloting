@@ -10,7 +10,7 @@ ALLOWED_HOSTS = ['118.201.195.130', 'eagm.cstechsolutions.com.sg']
 
 RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:80'
 
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 
 DATABASES = {
     'default': {
