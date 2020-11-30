@@ -44,7 +44,8 @@ def live_voting_multiple(request):
         polls = LivePollMultiple.objects.filter(company=user_company)
         polls_details = []
         has_voting_opened = False
-        count_users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True).count()
+        users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
+        count_users = users.count()
         for poll in polls:
             poll_details = {}
             poll_details['id'] = poll.id
@@ -57,18 +58,23 @@ def live_voting_multiple(request):
             poll_details['miss_addon'] = 0
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=poll):
                 poll_details['miss_addon'] += proxy_user.proxy_users.count()
+            for user in users:
+                vote = LivePollMultipleItemVote.objects.filter(user=user, live_poll_item__live_poll=poll).first()
+                if vote is not None:
+                    poll_details['miss'] -= 1
+                proxy = LivePollMultipleProxy.objects.filter(main_user=user, live_poll=poll).first()
+                if proxy is not None:
+                    poll_details['miss_addon'] -= 1
             for poll_item in poll_items:
                 item = {}
                 item['text'] = poll_item.text
                 votes = poll_item.multiple_item_votes.all()
                 item['votes'] = votes.count()
-                poll_details['miss'] -= item['votes']
                 item['votes_addon'] = 0
                 for vote in votes:
                     proxy = LivePollMultipleProxy.objects.filter(main_user=vote.user, live_poll=poll).first()
                     if proxy is not None:
                         item['votes_addon'] += proxy.proxy_users.all().count()
-                poll_details['miss_addon'] -= item['votes_addon']
                 items.append(item)
             poll_details['items'] = items
             polls_details.append(poll_details)
