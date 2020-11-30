@@ -104,7 +104,7 @@ def cur_live_voting_multiple(request):
             live_poll = None
         else:
             for item in live_poll.multiple_items.all():
-                print(item, item.multiple_item_votes.all().count())
+                # print(item, item.multiple_item_votes.all().count())
                 if item.multiple_item_votes.all().count() > live_poll.threshold:
                     live_poll = None
                     break
@@ -163,11 +163,11 @@ def live_poll_multiple_vote(request, live_poll_id):
         vote = LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item__live_poll=live_poll).first()
         if vote is None:
             live_poll_item_ids = request.POST.getlist('live_poll_items')
-            print('live_poll_multiple_vote', live_poll_item_ids)
+            # print('live_poll_multiple_vote', live_poll_item_ids)
             for live_poll_item_id in live_poll_item_ids:
                 live_poll_item_id = int(live_poll_item_id)
                 live_poll_item = LivePollMultipleItem.objects.get(id=live_poll_item_id)
-                print(live_poll_item)
+                # print(live_poll_item)
                 # print(get_client_ip(request), get_client_agent(request))
                 LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
                 # compute_live_poll_voting_result(live_poll)
