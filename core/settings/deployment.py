@@ -26,6 +26,12 @@ DATABASES = {
     }
 }
 
+ENVIRON_APPS += [
+    'weasyprint',
+]
+
+INSTALLED_APPS += ENVIRON_APPS
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
