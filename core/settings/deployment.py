@@ -26,7 +26,7 @@ DATABASES = {
     }
 }
 
-ENVIRON_APPS += [
+ENVIRON_APPS = [
     'weasyprint',
 ]
 
