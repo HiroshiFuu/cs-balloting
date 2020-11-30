@@ -58,6 +58,7 @@ def live_voting_multiple(request):
             poll_details['miss_addon'] = 0
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=poll):
                 poll_details['miss_addon'] += proxy_user.proxy_users.count()
+            poll_details['miss'] -= poll_details['miss_addon']
             for user in users:
                 vote = LivePollMultipleItemVote.objects.filter(user=user, live_poll_item__live_poll=poll).first()
                 if vote is not None:
