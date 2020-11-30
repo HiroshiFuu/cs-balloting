@@ -5,8 +5,13 @@
         <img src="/static/assets/logo.png" class="header-brand-img" alt="tabler logo">
       </a>
       <div class="d-flex order-lg-2 ml-auto">
+        {% if request.user.is_superuser %}
         <div class="nav-item d-none d-md-flex">
           <a href="https://github.com/app-generator/django-dashboard-tabler" class="btn btn-sm btn-outline-primary" target="_blank">Source code</a>
+        </div>
+        {% endif %}
+        <div class="nav-item d-none d-md-flex">
+          <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-primary" target="_blank">Admin</a>
         </div>
         <div class="nav-item d-none d-md-flex">
           <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-primary">Sign Out</a>
