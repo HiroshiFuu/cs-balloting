@@ -154,7 +154,7 @@ def live_poll_multiple_vote(request, live_poll_id):
     live_poll = get_object_or_404(LivePollMultiple, pk=live_poll_id)
     # print('live_poll_item', request.POST['live_poll_item'])
     try:
-        vote = LivePollMultipleItemVote.objects.filter(user=request.user).first()
+        vote = LivePollMultipleItemVote.objects.filter(user=request.user, live_poll_item__live_poll=live_poll).first()
         if vote is None:
             live_poll_item_ids = request.POST.getlist('live_poll_items')
             print('live_poll_multiple_vote', live_poll_item_ids)
