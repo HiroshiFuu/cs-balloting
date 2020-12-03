@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ImportExportModelAdmin, ExportMixin
 
 from .models import LivePollMultiple
 from .models import LivePollMultipleItem
@@ -22,7 +22,7 @@ class LivePollMultipleItemInline(admin.StackedInline):
 
 
 @admin.register(LivePollMultiple)
-class LivePollMultipleAdmin(ImportExportModelAdmin):
+class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'batch_no',
         'is_open',
@@ -59,7 +59,7 @@ class LivePollMultipleAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollMultipleItem)
-class LivePollMultipleItemAdmin(ImportExportModelAdmin):
+class LivePollMultipleItemAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'live_poll',
         'text',
@@ -74,9 +74,14 @@ class LivePollMultipleItemAdmin(ImportExportModelAdmin):
             return qs
         return qs.filter(live_poll__company=request.user.company)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'live_poll':
+            kwargs['queryset'] = LivePollMultiple.objects.filter(company=request.user.company)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(LivePollMultipleItemVote)
-class LivePollMultipleItemVoteAdmin(ImportExportModelAdmin):
+class LivePollMultipleItemVoteAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'user',
         'live_poll_item',
@@ -97,7 +102,7 @@ class LivePollMultipleItemVoteAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollMultipleProxy)
-class LivePollMultipleProxyAdmin(ImportExportModelAdmin):
+class LivePollMultipleProxyAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'live_poll',
         'main_user',
@@ -111,6 +116,8 @@ class LivePollMultipleProxyAdmin(ImportExportModelAdmin):
         if db_field.name == 'main_user':
             if not request.user.is_superuser:
                 kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+        if db_field.name == 'live_poll':
+            kwargs['queryset'] = LivePollMultiple.objects.filter(company=request.user.company)
         return super(LivePollMultipleProxyAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_dbfield(self, db_field, request=None, **kwargs):
@@ -127,7 +134,7 @@ class LivePollMultipleProxyAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollMultipleResult)
-class LivePollMultipleResultAdmin(ImportExportModelAdmin):
+class LivePollMultipleResultAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'live_poll',
         'voting_date',
