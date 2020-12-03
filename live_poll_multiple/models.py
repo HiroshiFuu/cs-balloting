@@ -11,6 +11,7 @@ from jsonfield import JSONField
 # Create your models here.
 class LivePollMultiple(LogMixin):
     company = models.ForeignKey(Company, on_delete=models.PROTECT)
+    text = models.CharField(max_length=255, null=True, blank=True)
     is_open = models.BooleanField('Is Open', default=False)
     opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
     opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', default=5)

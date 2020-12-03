@@ -49,6 +49,7 @@ def live_voting_multiple(request):
         for poll in polls:
             poll_details = {}
             poll_details['id'] = poll.id
+            poll_details['text'] = poll.text
             poll_details['batch_no'] = poll.batch_no
             poll_details['threshold'] = poll.threshold
             poll_details['is_open'] = poll.is_open

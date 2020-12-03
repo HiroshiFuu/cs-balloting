@@ -25,6 +25,7 @@ class LivePollMultipleItemInline(admin.StackedInline):
 class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'batch_no',
+        'text',
         'is_open',
         'threshold',
         'allocation',

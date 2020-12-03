@@ -29,7 +29,7 @@
         <form action="{% if live_poll %}{% url 'live_poll_multiple:live_poll_multiple_vote' live_poll.id %}{% endif %}" method="post" class="card">
           {% csrf_token %}
           <div class="card-header">
-            <h3 class="card-title">{% if live_poll %}Batch No. {{ live_poll.batch_no }}{% else %}No poll is opened for voting now.{% endif %}</h3>
+            <h3 class="card-title">{% if live_poll %}Batch No. {{ live_poll.batch_no }} {{ live_poll.text }}{% else %}No poll is opened for voting now.{% endif %}</h3>
           </div>
           {% if live_poll %}
           <div class="card-body">

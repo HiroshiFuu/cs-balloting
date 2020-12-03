@@ -41,6 +41,7 @@ td.status > .dropdown-icon {
                 <tr>
                   <td class="text-nowrap">
                     <div>Batch No. {{ poll_details.batch_no }} ({{ poll_details.threshold }})</div>
+                    <div>{% if poll_details.text %}{{ poll_details.text }}{% else %}-{% endif %}</div>
                   </td>
                   <td class="text-left status">
                     {% for item in poll_details.items %}
