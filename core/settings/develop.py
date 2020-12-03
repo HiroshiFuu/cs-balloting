@@ -20,3 +20,9 @@ DATABASES = {
         }
     }
 }
+
+ENVIRON_APPS = [
+    'wkhtmltopdf',
+]
+
+INSTALLED_APPS += ENVIRON_APPS
