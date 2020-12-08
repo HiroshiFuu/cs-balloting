@@ -139,7 +139,9 @@ def download_pdf(request, app=None, id=None):
     html_string = render_to_string('report_template.html', context)
     html = HTML(string=html_string)
     css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template.css'))
-    html.write_pdf(target='/tmp/{}.pdf'.format(filename), stylesheets=[CSS(css)]);
+    target = '/tmp/{}.pdf'.format(filename)
+    print('target', target)
+    html.write_pdf(target=str(target), stylesheets=[CSS(css)]);
     html_template = loader.get_template('report_template.html')
     fs = FileSystemStorage('/tmp')
     with fs.open('mypdf.pdf') as pdf:
