@@ -120,6 +120,7 @@ def populate_pdf_context(request, app=None, id=None):
                     lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
             # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
             context['lpm_record_pages'] = lpm_record_pages
+    print('populate_pdf_context', context, filename)
     return context, filename
 
 
