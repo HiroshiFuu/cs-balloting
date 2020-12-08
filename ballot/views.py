@@ -10,6 +10,8 @@ from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django import template
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from django.template.loader import render_to_string
 
 from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
@@ -26,7 +28,7 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.db.models import Q
 
-from datetime import date
+from datetime import date, datetime
 import os
 
 
@@ -132,23 +134,56 @@ def preview_pdf(request, app=None, id=None):
 @staff_member_required
 @login_required(login_url='/login/')
 def download_pdf(request, app=None, id=None):
-    from weasyprint import HTML, CSS
-    from django.core.files.storage import FileSystemStorage
-    from django.template.loader import render_to_string
+    import pdfkit
     context, filename = populate_pdf_context(request, app, id)
-    html_string = render_to_string('report_template.html', context)
-    html = HTML(string=html_string)
-    css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template_pdf.css'))
-    target = '/tmp/' + filename
-    print('target', target)
-    html.write_pdf(target=target, stylesheets=[css]);
-    html_template = loader.get_template('report_template.html')
-    fs = FileSystemStorage('/tmp')
+    html_content = loader.render_to_string('report_template.html', context)
+    css_list = [
+        os.path.join(settings.STATIC_ROOT, 'report_template_pdfkit.css'),
+    ]
+    options = {
+        'enable-local-file-access': None,
+        'page-size': 'A4',
+        'orientation': 'Landscape',
+        'no-outline': None,
+        'margin-top': '0cm',
+        'margin-left': '0cm',
+        'margin-right': '0cm',
+        'margin-bottom': '0cm',
+        'dpi': 600,
+        'disable-smart-shrinking': None,
+    }
+    pdf = pdfkit.from_string(
+        input=html_content,
+        output_path=os.path.join(settings.MEDIA_ROOT, filename),
+        css=css_list,
+        options=options
+    )
+    fs = FileSystemStorage(settings.MEDIA_ROOT)
     with fs.open(filename) as pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
         return response
     return response
+
+
+# @staff_member_required
+# @login_required(login_url='/login/')
+# def download_pdf(request, app=None, id=None):
+#     from weasyprint import HTML, CSS
+#     context, filename = populate_pdf_context(request, app, id)
+#     html_string = render_to_string('report_template.html', context)
+#     html = HTML(string=html_string)
+#     css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template_pdf.css'))
+#     target = '/tmp/' + filename
+#     print('target', target)
+#     html.write_pdf(target=target, stylesheets=[css]);
+#     html_template = loader.get_template('report_template.html')
+#     fs = FileSystemStorage('/tmp')
+#     with fs.open(filename) as pdf:
+#         response = HttpResponse(pdf, content_type='application/pdf')
+#         response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+#         return response
+#     return response
 
 
 @staff_member_required

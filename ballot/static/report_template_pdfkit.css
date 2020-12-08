@@ -1,7 +1,8 @@
 body {
-  width: 11.69in;
-  height: 8.27in;
+  width: 297mm;
+  height: 210mm;
   margin: 0;
+  padding: 0;
 }
 
 .upperline {
@@ -17,25 +18,26 @@ body {
 }
 
 html body article {
-  padding: 0 1cm;
+  padding: 0.5cm 1cm 0 1cm;
   position: relative;
-  height: 8.27in;
-  border: 1px dashed #000;
+  height: 204mm;
+  /*border: 1px dashed #000;*/
+  page-break-after: always;
 }
 
 html body article page_no {
-  bottom: 1cm;
+  bottom: 1.5cm;
   position: absolute;
   text-align: end;
 }
 
 html body article sub_title {
-  font-size: 14px;
+  font-size: 18px;
   display: block;
 }
 
 html body article sub_heading {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: bold;
   margin-top: 0.5cm;
   margin-bottom: 0.3cm;
@@ -44,7 +46,6 @@ html body article sub_heading {
 
 table {
   margin-top: 0.2cm;
-  font-size: 12px;
 }
 
 table tr td {
