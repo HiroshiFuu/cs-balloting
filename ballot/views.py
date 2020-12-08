@@ -37,11 +37,11 @@ def render_pdf(request, app=None, id=None):
         agm_details = {}
         if app == 'LPM':
             context['app'] = '(Live Poll Multiple)'
+            user_company = request.user.company
 
             lpm = LivePollMultiple.objects.get(id=int(id))
             agm_details['batch_no'] = lpm.batch_no
 
-            user_company = request.user.company
             total_lots = 0
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=lpm):
                 total_lots += proxy_user.proxy_users.count()
@@ -70,8 +70,10 @@ def render_pdf(request, app=None, id=None):
                 lpm_attendee = {}
                 lpm_attendee['unit_no'] = vote.user.unit_no
                 lpm_attendee['name'] = vote.user.username
-                if LivePollMultipleProxy.objects.filter(live_poll=lpm, main_user=vote.user):
-                    lpm_attendee['name'] += ' (Proxy)'
+                for proxy in LivePollMultipleProxy.objects.filter(live_poll=lpm):
+                    if vote.user in proxy.proxy_users.all():
+                        lpm_attendee['name'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        break
                 lpm_attendee['phone_no'] = vote.user.phone_no
                 lpm_attendee['voted_at'] = vote.created_at
                 lpm_attendee['ip_address'] = vote.ip_address
@@ -91,8 +93,9 @@ def render_pdf(request, app=None, id=None):
                         lpm_records = []
                     lpm_record = {}
                     lpm_record['voter'] = user.unit_no + ' ' + user.username
-                    if LivePollMultipleProxy.objects.filter(live_poll=lpm, main_user=user):
-                        lpm_record['voter'] += ' (Proxy)'
+                    proxy = user.multiple_proxy_users_proxys.filter(live_poll=lpm).first()
+                    if proxy is not None:
+                        lpm_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
                     lpm_record['voted_at'] = None
                     lpm_record['ip_address'] = None
                     if item.multiple_item_votes.filter(user=user):
