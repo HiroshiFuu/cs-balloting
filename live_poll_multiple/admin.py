@@ -90,6 +90,45 @@ class LivePollMultipleItemAdmin(ExportMixin, admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
+class CompanyLivePollListFilter(admin.SimpleListFilter):
+    # Human-readable title which will be displayed in the
+    # right admin sidebar just above the filter options.
+    title = _('Poll')
+
+    # Parameter for the filter that will be used in the URL query.
+    parameter_name = 'poll'
+
+    default_value = None
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        list_of_polls = []
+        queryset = LivePollMultiple.objects.filter(company=request.user.company)
+        for polls in queryset:
+            list_of_polls.append(
+                (str(polls.id), str(polls.batch_no) + ' ' + str(polls.text))
+            )
+        # print('CompanyLivePollListFilter', list_of_polls, sorted(list_of_polls, key=lambda tp: tp[0]))
+        return sorted(list_of_polls, key=lambda tp: tp[0])
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        # Compare the requested value to decide how to filter the queryset.
+        if self.value():
+            return queryset.filter(live_poll_item__live_poll=self.value())
+        return queryset
+
+
 @admin.register(LivePollMultipleItemVote)
 class LivePollMultipleItemVoteAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
@@ -98,8 +137,10 @@ class LivePollMultipleItemVoteAdmin(ExportMixin, admin.ModelAdmin):
         'ip_address',
         'user_agent',
         'created_at',
+        'proxy_user',
+        'is_proxy_vote',
     ]
-    list_filter = ['live_poll_item__live_poll']
+    list_filter = [CompanyLivePollListFilter]
     search_fields = ['user__username', 'live_poll_item__text', 'live_poll_item__poll_title']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
@@ -109,6 +150,11 @@ class LivePollMultipleItemVoteAdmin(ExportMixin, admin.ModelAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(live_poll_item__live_poll__company=request.user.company)
+
+    def is_proxy_vote(self, obj):
+        return obj.proxy_user is not None
+    is_proxy_vote.boolean = True
+    is_proxy_vote.short_description = 'Is Proxy Vote'
 
 
 @admin.register(LivePollMultipleProxy)
