@@ -76,6 +76,7 @@ require(['jquery'], function() {
   $(".nav-link.live_voting_multiple").addClass("active");
 
   {% if has_voting_opened %}
+
   var check_seconds_left = setInterval(function() {
     $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",
       function(ret) {
@@ -83,6 +84,7 @@ require(['jquery'], function() {
         var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
         $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
         if (opening_seconds_left <= 0) {
+          clearInterval(check_seconds_left);
           window.location.reload(true);
         }
       }
