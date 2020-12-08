@@ -10,8 +10,6 @@ from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django import template
 from django.conf import settings
-from django.core.files.storage import FileSystemStorage
-from django.template.loader import render_to_string
 
 from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
@@ -27,8 +25,6 @@ from .constants import POLL_TYPE_BY_LOT
 from django.db.models import Count
 from django.db.models import Sum
 from django.db.models import Q
-
-from weasyprint import HTML, CSS
 
 from datetime import date
 import os
@@ -136,6 +132,9 @@ def preview_pdf(request, app=None, id=None):
 @staff_member_required
 @login_required(login_url='/login/')
 def download_pdf(request, app=None, id=None):
+    from weasyprint import HTML, CSS
+    from django.core.files.storage import FileSystemStorage
+    from django.template.loader import render_to_string
     context, filename = populate_pdf_context(request, app, id)
     html_string = render_to_string('report_template.html', context)
     html = HTML(string=html_string)
