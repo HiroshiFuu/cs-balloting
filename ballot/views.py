@@ -28,9 +28,10 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.db.models import Q
 
-from weasyprint import HTML
+from weasyprint import HTML, CSS
 
 from datetime import date
+import os
 
 
 @staff_member_required
@@ -132,7 +133,8 @@ def preview_pdf(request, app=None, id=None):
 def download_pdf(request, app=None, id=None):
     html_string = render_to_string('report_template.html', populate_pdf_context(request, app, id))
     html = HTML(string=html_string)
-    html.write_pdf(target='/tmp/mypdf.pdf');
+    css = CSS(os.path.join(settings.STATIC_ROOT, 'static', 'report_template.css'))
+    html.write_pdf(target='/tmp/mypdf.pdf', stylesheets=[CSS(css)]);
     html_template = loader.get_template('report_template.html')
     fs = FileSystemStorage('/tmp')
     with fs.open('mypdf.pdf') as pdf:
