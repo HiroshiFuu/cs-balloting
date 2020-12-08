@@ -27,7 +27,7 @@ DATABASES = {
 }
 
 ENVIRON_APPS = [
-    'weasyprint',
+    'wkhtmltopdf',
 ]
 
 INSTALLED_APPS += ENVIRON_APPS

@@ -176,6 +176,10 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
 
+MEDIA_ROOT = str(CORE_DIR('media'))
+
+MEDIA_URL = '/media/'
+
 AUTH_USER_MODEL = 'authentication.AuthUser'
 
 LOGIN_REDIRECT_URL = 'ballot:home'

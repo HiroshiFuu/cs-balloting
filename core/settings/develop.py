@@ -26,3 +26,5 @@ ENVIRON_APPS = [
 ]
 
 INSTALLED_APPS += ENVIRON_APPS
+
+WKHTMLTOPDF_CMD = 'C:\\Program Files\\wkhtmltopdf\\bin'

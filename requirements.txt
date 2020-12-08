@@ -13,3 +13,6 @@ django-user-agents
 pyOpenSSL
 # sudo apt-get install libmariadbclient-dev
 mysqlclient
+# sudo apt-get install wkhtmltopdf
+django-wkhtmltopdf
+pdfkit
