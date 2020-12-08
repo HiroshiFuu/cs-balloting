@@ -17,7 +17,7 @@
 
 <body>
   <article id="agm_details">
-    {% include 'report_template_top.html' %}
+    {% include 'report_template_header.html' %}
     <sub_heading>
       AGM Overview
     </sub_heading>
@@ -47,14 +47,12 @@
         <td>{{ agm_details.meeting_closed }}</td>
       </tr>
     </table>
-    <page_no class="upperline">
-      Page 1
-    </page_no>
+    {% include 'report_template_footer.html' %}
   </article>
 
   {% for page_no, lpm_attendees in lpm_attendee_pages.items %}
   <article id="attendees">
-    {% include 'report_template_top.html' %}
+    {% include 'report_template_header.html' %}
     {% if forloop.counter0 == 0 %}
     <sub_heading>
       AGM Attendees
@@ -80,7 +78,7 @@
 
   {% for page_no, lpm_records in lpm_record_pages.items %}
   <article id="records">
-    {% include 'report_template_top.html' %}
+    {% include 'report_template_header.html' %}
     {% ifchanged lpm_records.text %}
     <sub_heading>
       {{ lpm_records.text }}

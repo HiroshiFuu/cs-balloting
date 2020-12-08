@@ -70,7 +70,7 @@ def populate_pdf_context(request, app=None, id=None):
             agm_details['meeting_closed'] = last_vote.created_at
 
             context['agm_details'] = agm_details
-            page_no = 1
+            context['page_no'] = page_no = 1
 
             lpm_attendee_pages = {}
             for idx, vote in enumerate(votes, start=0):

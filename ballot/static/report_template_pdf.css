@@ -20,11 +20,11 @@ html body article {
   padding: 0 1cm;
   position: relative;
   height: 8.27in;
-  border: 1px dashed #000;
+  /*border: 1px dashed #000;*/
 }
 
 html body article page_no {
-  bottom: 2cm;
+  bottom: 1cm;
   position: absolute;
 }
 
