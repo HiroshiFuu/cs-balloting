@@ -17,7 +17,7 @@ from authentication.constants import USER_TYPE_USER
 
 from survey.models import Survey, SurveyVote
 from live_poll.models import LivePollItemVote, LivePollProxy
-from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple
+from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple, LivePollMultipleItem
 
 from .constants import POLL_TYPE_BY_SHARE
 from .constants import POLL_TYPE_BY_LOT
@@ -59,11 +59,8 @@ def render_pdf(request, app=None, id=None):
             agm_details['meeting_closed'] = last_vote.created_at
 
             context['agm_details'] = agm_details
-
-            # voted_users_ids = set(votes.values_list('user', flat=True))
-            # voted_users = AuthUser.objects.filter(id__in=voted_users_ids)
-            # for voted_user in voted_users:
             page_no = 1
+
             lpm_attendee_pages = {}
             for idx, vote in enumerate(votes, start=0):
                 if idx % 2 == 0:
@@ -83,6 +80,29 @@ def render_pdf(request, app=None, id=None):
                 lpm_attendee_pages[str(page_no)]['lpm_attendees'] = lpm_attendees
             # print('render_pdf', 'lpm_attendee_pages', lpm_attendee_pages)
             context['lpm_attendee_pages'] = lpm_attendee_pages
+
+            lpm_record_pages = {}
+            record_count = 0
+            for idx_item, item in enumerate(LivePollMultipleItem.objects.filter(live_poll=lpm), start=0):
+                for idx_user, user in enumerate(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True), start=0):
+                    if record_count % 2 == 0:
+                        page_no += 1
+                        lpm_record_pages[str(page_no)] = {'text': item.text}
+                        lpm_records = []
+                    lpm_record = {}
+                    lpm_record['voter'] = user.unit_no + ' ' + user.username
+                    if LivePollMultipleProxy.objects.filter(live_poll=lpm, main_user=user):
+                        lpm_record['voter'] += ' (Proxy)'
+                    lpm_record['voted_at'] = None
+                    lpm_record['ip_address'] = None
+                    if item.multiple_item_votes.filter(user=user):
+                        lpm_record['voted_at'] = vote.created_at
+                        lpm_record['ip_address'] = vote.ip_address
+                    record_count += 1
+                    lpm_records.append(lpm_record)
+                    lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
+            # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
+            context['lpm_record_pages'] = lpm_record_pages
 
     html_template = loader.get_template('report_template.html')
     return HttpResponse(html_template.render(context, request))

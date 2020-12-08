@@ -45,6 +45,7 @@
       Page 1
     </page_no>
   </article>
+
   {% for page_no, lpm_attendees in lpm_attendee_pages.items %}
   <article id="attendees">
     {% include 'report_template_top.html' %}
@@ -62,6 +63,29 @@
         <td nowrap>{{ lpm_attendee.voted_at|time:"H:i:s" }}</td>
         <td nowrap>{{ lpm_attendee.ip_address }}</td>
         <td>{{ lpm_attendee.user_agent }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <page_no class="upperline">
+      Page {{ page_no }}
+    </page_no>
+  </article>
+  {% endfor %}
+
+  {% for page_no, lpm_records in lpm_record_pages.items %}
+  <article id="records">
+    {% include 'report_template_top.html' %}
+    {% ifchanged lpm_records.text %}
+    <sub_heading>
+      {{ lpm_records.text }}
+    </sub_heading>
+    {% endifchanged %}
+    <table>
+      {% for lpm_record in lpm_records.lpm_records %}
+      <tr>
+        <td nowrap>{{ lpm_record.voter }}</td>
+        <td nowrap>{% if pm_record.voted_at %}{{ lpm_record.voted_at|time:"H:i:s" }}{% else %}Did not vote{% endif %}</td>
+        <td nowrap>{% if pm_record.voted_at %}{{ lpm_record.ip_address }}{% endif %}</td>
       </tr>
       {% endfor %}
     </table>
