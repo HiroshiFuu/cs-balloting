@@ -58,7 +58,7 @@
       {% for lpm_attendee in lpm_attendees.lpm_attendees %}
       <tr>
         <td nowrap>{{ lpm_attendee.unit_no }}</td>
-        <td nowrap>{{ lpm_attendee.name }}</td>
+        <td>{{ lpm_attendee.name }}</td>
         <td nowrap>{{ lpm_attendee.phone_no }}</td>
         <td nowrap>{{ lpm_attendee.voted_at|time:"H:i:s" }}</td>
         <td nowrap>{{ lpm_attendee.ip_address }}</td>
@@ -84,8 +84,8 @@
       {% for lpm_record in lpm_records.lpm_records %}
       <tr>
         <td nowrap>{{ lpm_record.voter }}</td>
-        <td nowrap>{% if pm_record.voted_at %}{{ lpm_record.voted_at|time:"H:i:s" }}{% else %}Did not vote{% endif %}</td>
-        <td nowrap>{% if pm_record.voted_at %}{{ lpm_record.ip_address }}{% endif %}</td>
+        <td nowrap>{% if lpm_record.voted_at %}{{ lpm_record.voted_at|time:"H:i:s" }}{% else %}Did not vote{% endif %}</td>
+        <td nowrap>{% if lpm_record.voted_at %}{{ lpm_record.ip_address }}{% endif %}</td>
       </tr>
       {% endfor %}
     </table>

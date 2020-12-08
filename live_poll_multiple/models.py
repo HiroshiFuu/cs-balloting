@@ -60,9 +60,9 @@ class LivePollMultipleItemVote(LogMixin):
 
 
 class LivePollMultipleProxy(LogMixin):
-    live_poll = models.ForeignKey(LivePollMultiple, related_name='multiple_proxy_batches', on_delete=models.PROTECT)
-    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='multiple_main_user')
-    proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='multiple_proxy_users')
+    live_poll = models.ForeignKey(LivePollMultiple, related_name='multiple_live_poll_proxys', on_delete=models.PROTECT)
+    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='multiple_main_user_proxys')
+    proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='multiple_proxy_users_proxys')
 
     class Meta:
         managed = True
