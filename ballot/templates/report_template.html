@@ -70,9 +70,7 @@
       </tr>
       {% endfor %}
     </table>
-    <page_no class="upperline">
-      Page {{ page_no }}
-    </page_no>
+    {% include 'report_template_footer.html' %}
   </article>
   {% endfor %}
 
@@ -93,9 +91,7 @@
       </tr>
       {% endfor %}
     </table>
-    <page_no class="upperline">
-      Page {{ page_no }}
-    </page_no>
+    {% include 'report_template_footer.html' %}
   </article>
   {% endfor %}
 </body>
