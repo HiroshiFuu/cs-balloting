@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="{% static 'report_template.css' %}">
+  <title>AGM Report</title>
+  <meta name="description" content="Report Template">
+</head>
+
+<body>
+  <article id="agm_details">
+    {% include 'report_template_top.html' %}
+    <sub_heading>
+      AGM Overview
+    </sub_heading>
+    <table>
+      <tr>
+        <td>Title</td>
+        <td>Annual General Meeting of the Management Corportation Strata Title Plan No. {{ agm_details.batch_no }}</td>
+      </tr>
+      <tr>
+        <td>Venue</td>
+        <td>Online Conference Call</td>
+      </tr>
+      <tr>
+        <td>Total Lots:</td>
+        <td>{{ agm_details.total_lots }}</td>
+      </tr>
+      <tr>
+        <td>Total Shares:</td>
+        <td>{{ agm_details.total_shares }}</td>
+      </tr>
+      <tr>
+        <td>Meeting Started:</td>
+        <td>{{ agm_details.meeting_started }}</td>
+      </tr>
+      <tr>
+        <td>Meeting Closed:</td>
+        <td>{{ agm_details.meeting_closed }}</td>
+      </tr>
+    </table>
+    <page_no class="upperline">
+      Page 1
+    </page_no>
+  </article>
+  {% for page_no, lpm_attendees in lpm_attendee_pages.items %}
+  <article id="attendees">
+    {% include 'report_template_top.html' %}
+    {% if forloop.counter0 == 0 %}
+    <sub_heading>
+      AGM Attendees
+    </sub_heading>
+    {% endif %}
+    <table>
+      {% for lpm_attendee in lpm_attendees.lpm_attendees %}
+      <tr>
+        <td nowrap>{{ lpm_attendee.unit_no }}</td>
+        <td nowrap>{{ lpm_attendee.name }}</td>
+        <td nowrap>{{ lpm_attendee.phone_no }}</td>
+        <td nowrap>{{ lpm_attendee.voted_at|time:"H:i:s" }}</td>
+        <td nowrap>{{ lpm_attendee.ip_address }}</td>
+        <td>{{ lpm_attendee.user_agent }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <page_no class="upperline">
+      Page {{ page_no }}
+    </page_no>
+  </article>
+  {% endfor %}
+</body>
+
+</html>

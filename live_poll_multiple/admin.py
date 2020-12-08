@@ -1,7 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
+from django.urls import reverse
 
 from import_export.admin import ImportExportModelAdmin, ExportMixin
+from inline_actions.admin import InlineActionsModelAdminMixin
 
 from .models import LivePollMultiple
 from .models import LivePollMultipleItem
@@ -31,6 +35,7 @@ class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
         'allocation',
         'opened_at',
         'opening_duration_minustes',
+        'generate_agm_audit_report',
     ]
     inlines = [
         LivePollMultipleItemInline
@@ -56,6 +61,10 @@ class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
         if not change and request.user.user_type == USER_TYPE_COMPANY:
             obj.company = request.user.company
         super().save_model(request, obj, form, change)
+
+    def generate_agm_audit_report(self, obj):
+        return format_html('<a href="{url}" target="_blank" class="btn">{text}</a>', url=reverse('ballot:render_pdf', kwargs={'app': 'LPM', 'id': obj.id}), text=_("Generate AGM Audit Report"))
+    generate_agm_audit_report.short_description = _("Generate AGM Audit Report")
 
 
 

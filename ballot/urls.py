@@ -11,4 +11,5 @@ urlpatterns = [
     re_path(r'^.*\.html', views.pages, name='pages'),
     path('', views.dashboard, name='dashboard'),
     path('home/', views.dashboard, name='home'),
+    path('render_pdf/<str:app>/<int:id>/', views.render_pdf, name='render_pdf'),
 ]

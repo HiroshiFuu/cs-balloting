@@ -1,0 +1,51 @@
+body {
+  width: 1123px;
+  height: 794px;
+}
+
+.upperline {
+  border-top: 1px solid #000;
+  left: 1cm;
+  right: 1cm;
+}
+
+.underline {
+  border-bottom: 1px solid #000;
+  width: 100%;
+  display: block;
+}
+
+html body article {
+  padding: 1cm;
+  position: relative;
+  height: 100%;
+  border: 1px dashed #000;
+}
+
+html body article page_no {
+  bottom: 1.5cm;
+  text-align-last: right;
+  position: absolute;
+}
+
+html body article sub_title {
+  font-size: 18px;
+  display: block;
+}
+
+html body article sub_heading {
+  font-size: 22px;
+  font-weight: bold;
+  margin-top: 0.5cm;
+  margin-bottom: 0.3cm;
+  display: block;
+}
+
+table {
+  margin-top: 0.2cm;
+}
+
+table tr td {
+  padding-right: .5cm;
+  vertical-align: top;
+}

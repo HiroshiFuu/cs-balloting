@@ -17,7 +17,7 @@ from authentication.constants import USER_TYPE_USER
 
 from survey.models import Survey, SurveyVote
 from live_poll.models import LivePollItemVote, LivePollProxy
-
+from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple
 
 from .constants import POLL_TYPE_BY_SHARE
 from .constants import POLL_TYPE_BY_LOT
@@ -27,6 +27,65 @@ from django.db.models import Sum
 from django.db.models import Q
 
 from datetime import date
+
+
+@staff_member_required
+@login_required(login_url='/login/')
+def render_pdf(request, app=None, id=None):
+    context = {}
+    if app is not None:
+        agm_details = {}
+        if app == 'LPM':
+            context['app'] = '(Live Poll Multiple)'
+
+            lpm = LivePollMultiple.objects.get(id=int(id))
+            agm_details['batch_no'] = lpm.batch_no
+
+            user_company = request.user.company
+            total_lots = 0
+            for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=lpm):
+                total_lots += proxy_user.proxy_users.count()
+            total_shares = 0
+            users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
+            for user in users:
+                total_shares += user.weight
+            agm_details['total_lots'] = total_lots
+            agm_details['total_shares'] = total_shares
+
+            votes = LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=lpm).order_by('created_at')
+            first_vote = votes.first()
+            last_vote = votes.last()
+            agm_details['meeting_started'] = first_vote.created_at
+            agm_details['meeting_closed'] = last_vote.created_at
+
+            context['agm_details'] = agm_details
+
+            # voted_users_ids = set(votes.values_list('user', flat=True))
+            # voted_users = AuthUser.objects.filter(id__in=voted_users_ids)
+            # for voted_user in voted_users:
+            page_no = 1
+            lpm_attendee_pages = {}
+            for idx, vote in enumerate(votes, start=0):
+                if idx % 2 == 0:
+                    page_no += 1
+                    lpm_attendee_pages[str(page_no)] = {}
+                    lpm_attendees = []
+                lpm_attendee = {}
+                lpm_attendee['unit_no'] = vote.user.unit_no
+                lpm_attendee['name'] = vote.user.username
+                if LivePollMultipleProxy.objects.filter(live_poll=lpm, main_user=vote.user):
+                    lpm_attendee['name'] += ' (Proxy)'
+                lpm_attendee['phone_no'] = vote.user.phone_no
+                lpm_attendee['voted_at'] = vote.created_at
+                lpm_attendee['ip_address'] = vote.ip_address
+                lpm_attendee['user_agent'] = vote.user_agent
+                lpm_attendees.append(lpm_attendee)
+                lpm_attendee_pages[str(page_no)]['lpm_attendees'] = lpm_attendees
+            # print('render_pdf', 'lpm_attendee_pages', lpm_attendee_pages)
+            context['lpm_attendee_pages'] = lpm_attendee_pages
+
+    html_template = loader.get_template('report_template.html')
+    return HttpResponse(html_template.render(context, request))
 
 
 @staff_member_required
