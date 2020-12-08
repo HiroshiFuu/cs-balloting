@@ -54,7 +54,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             context['app'] = '(Live Poll Multiple)'
             agm_details['batch_no'] = lpm.batch_no
-            filename = '%s %s %s'.format(user_company, context['app'], lpm.batch_no)
+            filename = '{} {} {}'.format(user_company, context['app'], lpm.batch_no)
 
             total_lots = 0
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=lpm):
@@ -139,12 +139,12 @@ def download_pdf(request, app=None, id=None):
     html_string = render_to_string('report_template.html', context)
     html = HTML(string=html_string)
     css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template.css'))
-    html.write_pdf(target='/tmp/%s.pdf'.format(filename), stylesheets=[CSS(css)]);
+    html.write_pdf(target='/tmp/{}.pdf'.format(filename), stylesheets=[CSS(css)]);
     html_template = loader.get_template('report_template.html')
     fs = FileSystemStorage('/tmp')
     with fs.open('mypdf.pdf') as pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="%s"'.format(filename)
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
         return response
     return response
 
