@@ -11,7 +11,7 @@ from django.http import JsonResponse
 from django import template
 from django.conf import settings
 
-from authentication.models import AuthUser
+from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
@@ -32,14 +32,29 @@ from datetime import date
 @staff_member_required
 @login_required(login_url='/login/')
 def render_pdf(request, app=None, id=None):
+    user_company = request.user.company
+    if request.user.is_superuser:
+        user_company = LivePollMultiple.objects.get(id=int(id)).company
+        # try:
+        #     company_id = request.POST['company']
+        #     print('company_id', company_id)
+        #     user_company = Company.objects.get(id=int(company_id))
+        #     app = request.POST['app']
+        #     id = request.POST['id']
+        # except (KeyError, Company.DoesNotExist):
+        #     return render(request, 'company_selection.html', {'app': app, 'id': id, 'companys': Company.objects.all()})
+    elif user_company is None:
+        return HttpResponse('Something Went Very Wrong!')
+
     context = {}
     if app is not None:
         agm_details = {}
         if app == 'LPM':
-            context['app'] = '(Live Poll Multiple)'
-            user_company = request.user.company
-
             lpm = LivePollMultiple.objects.get(id=int(id))
+            if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=lpm).first() is None:
+                return HttpResponse('There is no vote yet!')
+
+            context['app'] = '(Live Poll Multiple)'
             agm_details['batch_no'] = lpm.batch_no
 
             total_lots = 0
@@ -106,7 +121,6 @@ def render_pdf(request, app=None, id=None):
                     lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
             # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
             context['lpm_record_pages'] = lpm_record_pages
-
     html_template = loader.get_template('report_template.html')
     return HttpResponse(html_template.render(context, request))
 
@@ -215,7 +229,7 @@ def dashboard(request):
                         voting_detail['created_at'] = vote.created_at
                         voting_detail['username'] = user.username + '(' + vote.user.username + ')'
                         live_poll_votings.append(voting_detail)
-        print('live_poll_votings', live_poll_votings)
+        # print('live_poll_votings', live_poll_votings)
         return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings, 'live_poll_votings': live_poll_votings})
     else:
         return HttpResponseRedirect(reverse('survey:surveys', args=()))
