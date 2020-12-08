@@ -17,24 +17,24 @@ body {
 }
 
 html body article {
-  padding: 1cm;
+  padding: 0 1cm;
   position: relative;
-  height: 200mm;
+  height: 8.27in;
   border: 1px dashed #000;
 }
 
 html body article page_no {
-  bottom: 1.5cm;
+  bottom: 2cm;
   position: absolute;
 }
 
 html body article sub_title {
-  font-size: 18px;
+  font-size: 14px;
   display: block;
 }
 
 html body article sub_heading {
-  font-size: 22px;
+  font-size: 18px;
   font-weight: bold;
   margin-top: 0.5cm;
   margin-bottom: 0.3cm;
@@ -43,6 +43,7 @@ html body article sub_heading {
 
 table {
   margin-top: 0.2cm;
+  font-size: 12px;
 }
 
 table tr td {

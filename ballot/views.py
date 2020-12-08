@@ -138,7 +138,7 @@ def download_pdf(request, app=None, id=None):
     context, filename = populate_pdf_context(request, app, id)
     html_string = render_to_string('report_template.html', context)
     html = HTML(string=html_string)
-    css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template.css'))
+    css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template_pdf.css'))
     target = '/tmp/' + filename
     print('target', target)
     html.write_pdf(target=target, stylesheets=[css]);
