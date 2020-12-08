@@ -35,7 +35,8 @@ class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
         'allocation',
         'opened_at',
         'opening_duration_minustes',
-        'generate_agm_audit_report',
+        'preview_agm_audit_report',
+        'download_agm_audit_report',
     ]
     inlines = [
         LivePollMultipleItemInline
@@ -62,9 +63,13 @@ class LivePollMultipleAdmin(ExportMixin, admin.ModelAdmin):
             obj.company = request.user.company
         super().save_model(request, obj, form, change)
 
-    def generate_agm_audit_report(self, obj):
-        return format_html('<a href="{url}" target="_blank" class="btn">{text}</a>', url=reverse('ballot:render_pdf', kwargs={'app': 'LPM', 'id': obj.id}), text=_("Generate AGM Audit Report"))
-    generate_agm_audit_report.short_description = _("Generate AGM Audit Report")
+    def preview_agm_audit_report(self, obj):
+        return format_html('<a href="{url}" target="_blank" class="btn">{text}</a>', url=reverse('ballot:preview_pdf', kwargs={'app': 'LPM', 'id': obj.id}), text=_("Preview AGM Audit Report"))
+    preview_agm_audit_report.short_description = _("Preview AGM Audit Report")
+
+    def download_agm_audit_report(self, obj):
+        return format_html('<a href="{url}" target="_blank" class="btn">{text}</a>', url=reverse('ballot:download_pdf', kwargs={'app': 'LPM', 'id': obj.id}), text=_("Download AGM Audit Report"))
+    download_agm_audit_report.short_description = _("Download AGM Audit Report")
 
 
 

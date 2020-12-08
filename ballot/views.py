@@ -10,6 +10,8 @@ from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django import template
 from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+from django.template.loader import render_to_string
 
 from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
@@ -26,23 +28,17 @@ from django.db.models import Count
 from django.db.models import Sum
 from django.db.models import Q
 
+from weasyprint import HTML
+
 from datetime import date
 
 
 @staff_member_required
 @login_required(login_url='/login/')
-def render_pdf(request, app=None, id=None):
+def populate_pdf_context(request, app=None, id=None):
     user_company = request.user.company
     if request.user.is_superuser:
         user_company = LivePollMultiple.objects.get(id=int(id)).company
-        # try:
-        #     company_id = request.POST['company']
-        #     print('company_id', company_id)
-        #     user_company = Company.objects.get(id=int(company_id))
-        #     app = request.POST['app']
-        #     id = request.POST['id']
-        # except (KeyError, Company.DoesNotExist):
-        #     return render(request, 'company_selection.html', {'app': app, 'id': id, 'companys': Company.objects.all()})
     elif user_company is None:
         return HttpResponse('Something Went Very Wrong!')
 
@@ -121,8 +117,31 @@ def render_pdf(request, app=None, id=None):
                     lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
             # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
             context['lpm_record_pages'] = lpm_record_pages
+    return context
+
+
+@staff_member_required
+@login_required(login_url='/login/')
+def preview_pdf(request, app=None, id=None):
     html_template = loader.get_template('report_template.html')
-    return HttpResponse(html_template.render(context, request))
+    return HttpResponse(html_template.render(populate_pdf_context(request, app, id), request))
+
+
+@staff_member_required
+@login_required(login_url='/login/')
+def download_pdf(request, app=None, id=None):
+    html_string = render_to_string('report_template.html', populate_pdf_context(request, app, id))
+    html = HTML(string=html_string)
+    html.write_pdf(target='/tmp/mypdf.pdf');
+    html_template = loader.get_template('report_template.html')
+    fs = FileSystemStorage('/tmp')
+    with fs.open('mypdf.pdf') as pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="mypdf.pdf"'
+        return response
+
+    return response
+
 
 
 @staff_member_required
