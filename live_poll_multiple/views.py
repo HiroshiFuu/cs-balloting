@@ -64,29 +64,35 @@ def live_voting_multiple(request):
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=poll):
                 poll_details['miss_addon'] += proxy_user.proxy_users.count()
             poll_details['miss'] -= poll_details['miss_addon']
-            for user in users:
-                vote = LivePollMultipleItemVote.objects.filter(user=user, live_poll_item__live_poll=poll).first()
-                if vote is not None:
+            # for user in users:
+            #     vote = LivePollMultipleItemVote.objects.filter(user=user, live_poll_item__live_poll=poll).first()
+            #     if vote is not None:
+            #         poll_details['miss'] -= 1
+            #     proxy = LivePollMultipleProxy.objects.filter(main_user=user, live_poll=poll).first()
+            #     if proxy is not None:
+            #         poll_details['miss_addon'] -= 1
+            for vote in LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=poll):
+                if vote.proxy_user is None:
                     poll_details['miss'] -= 1
-                proxy = LivePollMultipleProxy.objects.filter(main_user=user, live_poll=poll).first()
-                if proxy is not None:
+                else:
                     poll_details['miss_addon'] -= 1
             for poll_item in poll_items:
                 item = {}
                 item['text'] = poll_item.text
                 votes = poll_item.multiple_item_votes.all()
-                item['votes'] = votes.count()
-                item['votes_addon'] = 0
-                for vote in votes:
-                    proxy = LivePollMultipleProxy.objects.filter(main_user=vote.user, live_poll=poll).first()
-                    if proxy is not None:
-                        item['votes_addon'] += proxy.proxy_users.all().count()
+                item['votes'] = votes.filter(proxy_user=None).count()
+                item['votes_addon'] = votes.exclude(proxy_user=None).count()
+                # for vote in votes:
+                #     proxy = LivePollMultipleProxy.objects.filter(main_user=vote.user, live_poll=poll).first()
+                #     if proxy is not None:
+                #         item['votes_addon'] += proxy.proxy_users.all().count()
                 items.append(item)
             poll_details['items'] = items
             polls_details.append(poll_details)
             if poll.is_open:
                 has_voting_opened = True
         # print('polls_details', polls_details)
+        # print('polls_details', 'has_voting_opened', has_voting_opened)
         return render(request, 'live_voting_multiple.html', {'polls_details': polls_details, 'has_voting_opened': has_voting_opened})
     else:
         if request.user.is_superuser:
@@ -149,6 +155,7 @@ def open_live_voting_multiple(request, live_poll_id):
         live_poll.opened_at = datetime.now()
         # live_poll.opening_duration_minustes = 5
         live_poll.save()
+        print(live_poll_id, 'opened')
     return HttpResponseRedirect(reverse('live_poll_multiple:live_voting_multiple', args=()))
 
 
@@ -158,6 +165,7 @@ def close_live_voting_multiple(request, live_poll_id):
         live_poll = LivePollMultiple.objects.get(pk=live_poll_id)
         live_poll.is_open = False
         live_poll.save()
+        print(live_poll_id, 'closed')
     return HttpResponseRedirect(reverse('live_poll_multiple:live_voting_multiple', args=()))
 
 
@@ -176,10 +184,10 @@ def live_poll_multiple_vote(request, live_poll_id):
                 # print(live_poll_item)
                 # print(get_client_ip(request), get_client_agent(request))
                 LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
-                # proxy = LivePollMultipleProxy.objects.filter(live_poll=live_poll, main_user=request.user).first()
-                # if proxy is not None:
-                #     for proxy_user in proxy.proxy_users.all():
-                #         LivePollMultipleItemVote.objects.create(user=proxy_user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+                proxy = LivePollMultipleProxy.objects.filter(live_poll=live_poll, main_user=request.user).first()
+                if proxy is not None:
+                    for proxy_user in proxy.proxy_users.all():
+                        LivePollMultipleItemVote.objects.create(user=proxy_user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request), proxy_user=request.user)
                 compute_live_poll_multiple_voting_result(live_poll)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
         else:
@@ -194,18 +202,10 @@ def compute_live_poll_multiple_voting_result(live_poll):
     live_poll_result, created = LivePollMultipleResult.objects.get_or_create(live_poll=live_poll)
     results = []
     for poll_item in LivePollMultipleItem.objects.filter(live_poll=live_poll):
-        result = {'option': poll_item.text, 'votes': 0}
-        voting = poll_item.multiple_item_votes.values('live_poll_item__text').annotate(
-            num_votes=Count('live_poll_item__id'))
-        # print(voting)
-        result['votes'] = result['proxy_votes'] = 0
-        if voting.exists():
-            result['votes'] = voting[0]['num_votes']
-            for vote in poll_item.multiple_item_votes.all():
-                proxy = LivePollMultipleProxy.objects.filter(live_poll=live_poll, main_user=vote.user).first()
-                if proxy is not None:
-                    result['proxy_votes'] = proxy.proxy_users.count()
+        result = {'option': poll_item.text, 'votes': 0, 'proxy_votes': 0}
+        result['votes'] = poll_item.multiple_item_votes.filter(proxy_user=None).count()
+        result['proxy_votes'] = poll_item.multiple_item_votes.exclude(proxy_user=None).count()
         results.append(result)
-    print('compute_live_poll_multiple_voting_result', live_poll, results)
+    # print('compute_live_poll_multiple_voting_result', live_poll, results)
     live_poll_result.result = results
     live_poll_result.save()
