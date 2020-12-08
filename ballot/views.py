@@ -44,6 +44,7 @@ def populate_pdf_context(request, app=None, id=None):
         return HttpResponse('Something Went Very Wrong!')
 
     context = {}
+    filename = None
     if app is not None:
         agm_details = {}
         if app == 'LPM':
@@ -53,6 +54,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             context['app'] = '(Live Poll Multiple)'
             agm_details['batch_no'] = lpm.batch_no
+            filename = '%s %s %s'.format(user_company, context['app'], lpm.batch_no)
 
             total_lots = 0
             for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=lpm):
@@ -118,32 +120,32 @@ def populate_pdf_context(request, app=None, id=None):
                     lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
             # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
             context['lpm_record_pages'] = lpm_record_pages
-    return context
+    return context, filename
 
 
 @staff_member_required
 @login_required(login_url='/login/')
 def preview_pdf(request, app=None, id=None):
     html_template = loader.get_template('report_template.html')
-    return HttpResponse(html_template.render(populate_pdf_context(request, app, id), request))
+    context, filename = populate_pdf_context(request, app, id)
+    return HttpResponse(html_template.render(context, request))
 
 
 @staff_member_required
 @login_required(login_url='/login/')
 def download_pdf(request, app=None, id=None):
-    html_string = render_to_string('report_template.html', populate_pdf_context(request, app, id))
+    context, filename = populate_pdf_context(request, app, id)
+    html_string = render_to_string('report_template.html', context)
     html = HTML(string=html_string)
-    css = CSS(os.path.join(settings.STATIC_ROOT, 'static', 'report_template.css'))
-    html.write_pdf(target='/tmp/mypdf.pdf', stylesheets=[CSS(css)]);
+    css = CSS(os.path.join(settings.STATIC_ROOT, 'report_template.css'))
+    html.write_pdf(target='/tmp/%s.pdf'.format(filename), stylesheets=[CSS(css)]);
     html_template = loader.get_template('report_template.html')
     fs = FileSystemStorage('/tmp')
     with fs.open('mypdf.pdf') as pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="mypdf.pdf"'
+        response['Content-Disposition'] = 'attachment; filename="%s"'.format(filename)
         return response
-
     return response
-
 
 
 @staff_member_required
