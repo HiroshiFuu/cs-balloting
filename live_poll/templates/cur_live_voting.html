@@ -1,4 +1,5 @@
 {% extends "layouts/base.html" %}
+{% load static %}
 {% block title %} Voting {% endblock %}
 {% block styles %}
 <style>
@@ -7,7 +8,8 @@
   margin-right: 0rem;
   font-size: 44px;
 }
-.selectgroup-pills .selectgroup-item {
+
+#live_poll_options {
   margin-right: 2rem;
   text-align: center;
   font-size: 26px;
@@ -34,28 +36,43 @@
           {% if poll_item %}
           <div class="card-body">
             <div class="row">
-              <div class="col-md-12 col-lg-12">
+              <div class="col-md-6 col-lg-6">
                 <div class="form-group">
-                  <div id="live_poll_options" class="selectgroup selectgroup-pills">
-                    <label class="selectgroup-item">
-                      <input type="radio" id="option0" name="live_poll_option" value="1" class="selectgroup-input">
-                      <span class="selectgroup-button"><i class="dropdown-icon fa fa-smile-o"></i></span>For
-                    </label>
-                    <label class="selectgroup-item">
-                      <input type="radio" id="option2" name="live_poll_option" value="3" class="selectgroup-input">
-                      <span class="selectgroup-button"><i class="dropdown-icon fa fa-frown-o"></i></span>Against
-                    </label>
-                    <label class="selectgroup-item">
-                      <input type="radio" id="option1" name="live_poll_option" value="2" class="selectgroup-input">
-                      <span class="selectgroup-button"><i class="dropdown-icon fa fa-meh-o"></i></span>Abstain
-                    </label>
+                  <div id="live_poll_options" class="row gutters-sm">
+                    <div class="col-6 col-sm-4">
+                      <label class="imagecheck">
+                        <input name="live_poll_option" type="radio" value="1" class="imagecheck-input">
+                        <figure class="imagecheck-figure">
+                          <img src="{% static 'for.jpeg' %}" alt="}" class="imagecheck-image">
+                        </figure>
+                      </label>
+                      For
+                    </div>
+                    <div class="col-6 col-sm-4">
+                      <label class="imagecheck mb-4">
+                        <input name="live_poll_option" type="radio" value="3" class="imagecheck-input">
+                        <figure class="imagecheck-figure">
+                          <img src="{% static 'against.jpeg' %}" alt="}" class="imagecheck-image">
+                        </figure>
+                        Against
+                      </label>
+                    </div>
+                    <div class="col-6 col-sm-4">
+                      <label class="imagecheck mb-4">
+                        <input name="live_poll_option" type="radio" value="2" class="imagecheck-input">
+                        <figure class="imagecheck-figure">
+                          <img src="{% static 'abstain.jpeg' %}" alt="}" class="imagecheck-image">
+                        </figure>
+                        Abstain
+                      </label>
+                    </div>
                   </div>
                 </div>
-                <div class="input-group">
-                  <button id="btnSubmit" type="submit" class="btn btn-primary" disabled="disabled">Submit Vote</button>
-                  <label id="time_label" class="time_label" for="btnSubmit"></label>
-                </div>
               </div>
+            </div>
+            <div class="input-group">
+              <button id="btnSubmit" type="submit" class="btn btn-primary" disabled="disabled">Submit Vote</button>
+              <label id="time_label" class="time_label" for="btnSubmit"></label>
             </div>
           </div>
           {% endif %}
