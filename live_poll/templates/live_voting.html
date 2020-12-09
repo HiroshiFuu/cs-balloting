@@ -2,7 +2,7 @@
 {% block title %} Live Voting {% endblock %}
 {% block styles %}
 <style>
-a.disabled {
+  a.disabled {
     pointer-events: none;
     color: #ccc;
 }
@@ -74,21 +74,25 @@ td.status > .dropdown-icon {
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <script type="text/javascript">
-  require(['jquery'], function () {
-    $(".nav-link").removeClass("active");
-    $(".nav-link.live_voting").addClass("active");
+require(['jquery'], function() {
+  $(".nav-link").removeClass("active");
+  $(".nav-link.live_voting").addClass("active");
 
-    {% if has_voting_opened %}
-    var check_seconds_left = setInterval(function() {
-      $.get("{% url 'live_poll:live_voting_openning_json' %}",
-        function(ret) {
-          // console.log("live_voting", ret);
-          var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
-          $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+  {% if has_voting_opened %}
+  var check_seconds_left = setInterval(function() {
+    $.get("{% url 'live_poll:live_voting_openning_json' %}",
+      function(ret) {
+        // console.log("live_voting", ret);
+        var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
+        $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+        if (opening_seconds_left <= 0) {
+          clearInterval(check_seconds_left);
+          window.location.reload(true); 
         }
-      );
-    }, 1000);
-    {% endif %}
-  });
+      }
+    );
+  }, 1000);
+  {% endif %}
+});
 </script>
 {% endblock javascripts %}
