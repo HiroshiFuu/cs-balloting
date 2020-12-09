@@ -18,7 +18,7 @@ from .models import LivePollResult
 from .models import LivePollProxy
 from .models import LivePollBatch
 
-from authentication.models import AuthUser
+from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
@@ -83,8 +83,15 @@ def start_next_batch(request, poll_id):
 
 @login_required(login_url='/login/')
 def live_voting(request):
+    user_company = None
+    if request.user.is_superuser:
+        try:
+            user_company = Company.objects.get(pk=request.POST['company'])
+        except (KeyError, Company.DoesNotExist):
+            return render(request, 'company_selection.html', {'companys': Company.objects.all(), 'action': '/live_voting/'})
     if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
         user_company = request.user.company
+    if user_company is not None:
         poll = LivePoll.objects.filter(company=user_company, is_chosen=True).first()
         poll_details = {}
         has_voting_opened = False
@@ -185,10 +192,7 @@ def live_voting(request):
             # print('poll_details', poll_details)
         return render(request, 'live_voting.html', {'poll_details': poll_details, 'has_voting_opened': has_voting_opened})
     else:
-        if request.user.is_superuser:
-            return HttpResponse('Admin Page U/C')
-        else:
-            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+        return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
 
 
 @login_required(login_url='/login/')

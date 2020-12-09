@@ -43,8 +43,15 @@ def get_client_agent(request):
 
 @login_required(login_url='/login/')
 def live_voting_multiple(request):
+    user_company = None
+    if request.user.is_superuser:
+        try:
+            user_company = Company.objects.get(pk=request.POST['company'])
+        except (KeyError, Company.DoesNotExist):
+            return render(request, 'company_selection.html', {'companys': Company.objects.all(), 'action': '/live_voting_multiple/'})
     if request.user.is_staff and request.user.user_type == USER_TYPE_COMPANY:
         user_company = request.user.company
+    if user_company is not None:
         polls = LivePollMultiple.objects.filter(company=user_company)
         polls_details = []
         has_voting_opened = False
@@ -95,10 +102,7 @@ def live_voting_multiple(request):
         # print('polls_details', 'has_voting_opened', has_voting_opened)
         return render(request, 'live_voting_multiple.html', {'polls_details': polls_details, 'has_voting_opened': has_voting_opened})
     else:
-        if request.user.is_superuser:
-            return HttpResponse('Admin Page U/C')
-        else:
-            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+        return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
 
 
 @login_required(login_url='/login/')
