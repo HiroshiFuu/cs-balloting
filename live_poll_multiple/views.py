@@ -21,7 +21,7 @@ from .models import LivePollMultipleItemVote
 from .models import LivePollMultipleResult
 from .models import LivePollMultipleProxy
 
-from authentication.models import AuthUser
+from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 

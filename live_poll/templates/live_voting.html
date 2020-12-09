@@ -21,7 +21,11 @@ td.status > .dropdown-icon {
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">
+        {% if poll_details %}
         {{ poll_details.title }} Batch No. {{ poll_details.batch_no }} <a href="{% url 'live_poll:start_next_batch' poll_details.id %}" target="_self" class="btn btn-outline-secondary"><i class="dropdown-icon fe fe-plus"></i><b>Start Next Batch</b></a>
+        {% else %}
+        There is no any poll item, please add poll item(s) first!
+        {% endif %}
       </h1>
     </div>
     <div class="row row-cards row-deck">
