@@ -2,8 +2,9 @@
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.utils.translation import ugettext_lazy as _
 
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ExportMixin
 from adminsortable2.admin import SortableAdminMixin
 
 from .models import LivePoll
@@ -26,7 +27,7 @@ class LivePollItemInline(admin.StackedInline):
 
 
 @admin.register(LivePoll)
-class LivePollAdmin(ImportExportModelAdmin):
+class LivePollAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'title',
         'is_chosen',
@@ -60,7 +61,7 @@ class LivePollAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollItem)
-class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
+class LivePollItemAdmin(SortableAdminMixin, ExportMixin, admin.ModelAdmin):
     list_display = [
         'order',
         'poll',
@@ -87,8 +88,51 @@ class LivePollItemAdmin(SortableAdminMixin, ImportExportModelAdmin):
             return ('is_open', 'opened_at')
 
 
+class CompanyLivePollItemBatchListFilter(admin.SimpleListFilter):
+    title = _('Poll Batch')
+    parameter_name = 'poll_batch'
+    default_value = None
+
+    def lookups(self, request, model_admin):
+        list_of_poll_batchs = []
+        queryset = LivePollBatch.objects.filter(poll__company=request.user.company)
+        for batch in queryset:
+            list_of_poll_batchs.append(
+                (str(batch.id), str(batch.batch_no))
+            )
+        # print('CompanyLivePollItemBatchListFilter', list_of_poll_batchs, sorted(list_of_poll_batchs, key=lambda tp: tp[0]))
+        return sorted(list_of_poll_batchs, key=lambda tp: tp[0])
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(poll_batch=self.value())
+        return queryset
+
+
+class CompanyLivePollItemListFilter(admin.SimpleListFilter):
+    title = _('Poll Item')
+    parameter_name = 'poll_item'
+    default_value = None
+
+    def lookups(self, request, model_admin):
+        list_of_poll_items = []
+        poll = LivePoll.objects.filter(company=request.user.company, is_chosen=True).first()
+        queryset = LivePollItem.objects.filter(poll=poll).order_by('order')
+        for item in queryset:
+            list_of_poll_items.append(
+                (str(item.id), str(item.text))
+            )
+        # print('CompanyLivePollItemListFilter', list_of_poll_items, sorted(list_of_poll_items, key=lambda tp: tp[0]))
+        return sorted(list_of_poll_items, key=lambda tp: tp[0])
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(poll_batch=self.value())
+        return queryset
+
+
 @admin.register(LivePollItemVote)
-class LivePollItemVoteAdmin(ImportExportModelAdmin):
+class LivePollItemVoteAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'user',
         'poll_item',
@@ -98,7 +142,7 @@ class LivePollItemVoteAdmin(ImportExportModelAdmin):
         'user_agent',
         'created_at',
     ]
-    list_filter = ['poll_batch', 'poll_item']
+    list_filter = [CompanyLivePollItemBatchListFilter, CompanyLivePollItemListFilter]
     search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title', 'poll_batch__batch_no']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
@@ -111,7 +155,7 @@ class LivePollItemVoteAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollProxy)
-class LivePollProxyAdmin(ImportExportModelAdmin):
+class LivePollProxyAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'poll_batch',
         'main_user',
@@ -141,7 +185,7 @@ class LivePollProxyAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollResult)
-class LivePollResultAdmin(ImportExportModelAdmin):
+class LivePollResultAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'live_poll',
         'voting_date',
@@ -159,7 +203,7 @@ class LivePollResultAdmin(ImportExportModelAdmin):
 
 
 @admin.register(LivePollBatch)
-class LivePollBatchAdmin(ImportExportModelAdmin):
+class LivePollBatchAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'poll',
         'batch_no',
