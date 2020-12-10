@@ -26,6 +26,7 @@ html body article {
 html body article page_no {
   bottom: 1.5cm;
   position: absolute;
+  text-align: end;
 }
 
 html body article sub_title {

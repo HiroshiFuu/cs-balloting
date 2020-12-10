@@ -18,7 +18,7 @@ from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
 from survey.models import Survey, SurveyVote
-from live_poll.models import LivePollItemVote, LivePollProxy
+from live_poll.models import LivePollItemVote, LivePollProxy, LivePoll, LivePollItem
 from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple, LivePollMultipleItem
 
 from .constants import POLL_TYPE_BY_SHARE
@@ -31,47 +31,51 @@ from django.db.models import Q
 from datetime import date, datetime
 import os
 
+VOTE_OPTIONS_MAPPING = {1: 'For', 2: 'Abstain', 3: 'Against'}
+
 
 @staff_member_required
 @login_required(login_url='/login/')
 def populate_pdf_context(request, app=None, id=None):
     user_company = request.user.company
+    obj = None
+    try:
+        if app == 'LPM':
+            obj = LivePollMultiple.objects.get(id=int(id))
+        if app == 'LP':
+            obj = LivePoll.objects.get(id=int(id))
+    except Exception as e:
+        print(e)
+        return None, None, HttpResponse('Something Went Very Very Wrong!')
     if request.user.is_superuser:
-        user_company = LivePollMultiple.objects.get(id=int(id)).company
-    elif user_company is None:
-        return HttpResponse('Something Went Very Wrong!')
+        user_company = obj.company
+    if user_company is None or obj is None:
+        return None, None, HttpResponse('Something Went Very Wrong!')
 
     context = {}
     filename = None
     if app is not None:
-        agm_details = {}
+        users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
+        total_lots = users.count()
+        total_shares = 0
+        for user in users:
+            total_shares += user.weight
+        agm_overview = {'total_lots': total_lots, 'total_shares': total_shares}
+
         if app == 'LPM':
-            lpm = LivePollMultiple.objects.get(id=int(id))
-            if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=lpm).first() is None:
-                return HttpResponse('There is no vote yet!')
+            if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).first() is None:
+                return None, None, HttpResponse('There is no vote yet!')
 
             context['app'] = '(Live Poll Multiple)'
-            agm_details['batch_no'] = lpm.batch_no
-            filename = '{} {} {}.pdf'.format(user_company, context['app'], lpm.batch_no)
-            filename = str(filename).replace(' ', '_')
+            agm_overview['batch_no'] = obj.batch_no
 
-            total_lots = 0
-            for proxy_user in LivePollMultipleProxy.objects.filter(main_user__company=user_company, live_poll=lpm):
-                total_lots += proxy_user.proxy_users.count()
-            total_shares = 0
-            users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
-            for user in users:
-                total_shares += user.weight
-            agm_details['total_lots'] = total_lots
-            agm_details['total_shares'] = total_shares
-
-            votes = LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=lpm).order_by('created_at')
+            votes = LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).order_by('created_at')
             first_vote = votes.first()
             last_vote = votes.last()
-            agm_details['meeting_started'] = first_vote.created_at
-            agm_details['meeting_closed'] = last_vote.created_at
+            agm_overview['meeting_started'] = first_vote.created_at
+            agm_overview['meeting_closed'] = last_vote.created_at
 
-            context['agm_details'] = agm_details
+            context['agm_overview'] = agm_overview
             context['page_no'] = page_no = 1
 
             lpm_attendee_pages = {}
@@ -83,7 +87,7 @@ def populate_pdf_context(request, app=None, id=None):
                 lpm_attendee = {}
                 lpm_attendee['unit_no'] = vote.user.unit_no
                 lpm_attendee['name'] = vote.user.username
-                for proxy in LivePollMultipleProxy.objects.filter(live_poll=lpm):
+                for proxy in LivePollMultipleProxy.objects.filter(live_poll=obj):
                     if vote.user in proxy.proxy_users.all():
                         lpm_attendee['name'] += ' (Proxy ' + proxy.main_user.username + ')'
                         break
@@ -92,21 +96,21 @@ def populate_pdf_context(request, app=None, id=None):
                 lpm_attendee['ip_address'] = vote.ip_address
                 lpm_attendee['user_agent'] = vote.user_agent
                 lpm_attendees.append(lpm_attendee)
-                lpm_attendee_pages[str(page_no)]['lpm_attendees'] = lpm_attendees
+                lpm_attendee_pages[str(page_no)]['attendees'] = lpm_attendees
             # print('render_pdf', 'lpm_attendee_pages', lpm_attendee_pages)
-            context['lpm_attendee_pages'] = lpm_attendee_pages
+            context['attendee_pages'] = lpm_attendee_pages
 
             lpm_record_pages = {}
             record_count = 0
-            for idx_item, item in enumerate(LivePollMultipleItem.objects.filter(live_poll=lpm), start=0):
-                for idx_user, user in enumerate(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True), start=0):
+            for idx_item, item in enumerate(LivePollMultipleItem.objects.filter(live_poll=obj), start=0):
+                for idx_user, user in enumerate(users, start=0):
                     if record_count % 2 == 0:
                         page_no += 1
                         lpm_record_pages[str(page_no)] = {'text': item.text}
                         lpm_records = []
                     lpm_record = {}
                     lpm_record['voter'] = user.unit_no + ' ' + user.username
-                    proxy = user.multiple_proxy_users_proxys.filter(live_poll=lpm).first()
+                    proxy = user.multiple_proxy_users_proxys.filter(live_poll=obj).first()
                     if proxy is not None:
                         lpm_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
                     lpm_record['voted_at'] = None
@@ -116,18 +120,94 @@ def populate_pdf_context(request, app=None, id=None):
                         lpm_record['ip_address'] = vote.ip_address
                     record_count += 1
                     lpm_records.append(lpm_record)
-                    lpm_record_pages[str(page_no)]['lpm_records'] = lpm_records
+                    lpm_record_pages[str(page_no)]['records'] = lpm_records
             # print('render_pdf', 'lpm_record_pages', lpm_record_pages)
-            context['lpm_record_pages'] = lpm_record_pages
-    print('populate_pdf_context', context, str(filename))
-    return context, str(filename)
+            context['record_pages'] = lpm_record_pages
+
+        if app == 'LP':
+            if LivePollItemVote.objects.filter(poll_item__poll=obj).first() is None:
+                return None, None, HttpResponse('There is no vote yet!')
+
+            context['app'] = '(Live Poll)'
+            batch = obj.batchs.order_by('-batch_no').first()
+            agm_overview['batch_no'] = batch.batch_no
+
+            votes = batch.batch_votes.order_by('created_at')
+            first_vote = votes.first()
+            last_vote = votes.last()
+            agm_overview['meeting_started'] = first_vote.created_at
+            agm_overview['meeting_closed'] = last_vote.created_at
+
+            context['agm_overview'] = agm_overview
+            context['page_no'] = page_no = 1
+
+            lp_attendee_pages = {}
+            for idx, user in enumerate(users, start=0):
+                user_votes = user.user_votes.filter(poll_batch=batch)
+                if not user_votes:
+                    continue
+                if idx % 2 == 0:
+                    page_no += 1
+                    lp_attendee_pages[str(page_no)] = {}
+                    lp_attendees = []
+                lp_attendee = {}
+                lp_attendee['unit_no'] = user.unit_no
+                lp_attendee['name'] = user.username
+                for proxy in LivePollProxy.objects.filter(poll_batch=batch):
+                    if user in proxy.proxy_users.all():
+                        lp_attendee['name'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        break
+                lp_attendee['phone_no'] = user.phone_no
+                vote = user_votes.first()
+                lp_attendee['voted_at'] = vote.created_at
+                lp_attendee['ip_address'] = vote.ip_address
+                lp_attendee['user_agent'] = vote.user_agent
+                lp_attendees.append(lp_attendee)
+                lp_attendee_pages[str(page_no)]['attendees'] = lp_attendees
+            # print('render_pdf', 'lp_attendee_pages', lp_attendee_pages)
+            context['attendee_pages'] = lp_attendee_pages
+
+            lp_record_pages = {}
+            record_count = 0
+            for idx_item, item in enumerate(LivePollItem.objects.filter(poll=obj), start=0):
+                for idx_user, user in enumerate(users, start=0):
+                    if record_count % 2 == 0:
+                        page_no += 1
+                        lp_record_pages[str(page_no)] = {'text': item.text}
+                        lp_records = []
+                    lp_record = {}
+                    lp_record['voter'] = user.unit_no + ' ' + user.username
+                    proxy = user.proxy_users_proxys.filter(poll_batch=batch).first()
+                    if proxy is not None:
+                        lp_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
+                    lp_record['voted_at'] = None
+                    lp_record['ip_address'] = None
+                    lp_record['vote_option'] = -1
+                    vote = item.item_votes.filter(user=user, poll_batch=batch).first()
+                    if vote is not None:
+                        lp_record['voted_at'] = vote.created_at
+                        lp_record['ip_address'] = vote.ip_address
+                        lp_record['vote_option'] = VOTE_OPTIONS_MAPPING[vote.vote_option]
+                    record_count += 1
+                    lp_records.append(lp_record)
+                    lp_record_pages[str(page_no)]['records'] = lp_records
+            # print('render_pdf', 'lp_record_pages', lp_record_pages)
+            context['record_pages'] = lp_record_pages
+
+        filename = '{} {} {}.pdf'.format(user_company, context['app'], agm_overview['batch_no'])
+        filename = str(filename).replace(' ', '_')
+
+    # print('populate_pdf_context', context, str(filename))
+    return context, str(filename), None
 
 
 @staff_member_required
 @login_required(login_url='/login/')
 def preview_pdf(request, app=None, id=None):
     html_template = loader.get_template('report_template.html')
-    context, filename = populate_pdf_context(request, app, id)
+    context, filename, error = populate_pdf_context(request, app, id)
+    if error:
+        return error
     return HttpResponse(html_template.render(context, request))
 
 
@@ -135,7 +215,9 @@ def preview_pdf(request, app=None, id=None):
 @login_required(login_url='/login/')
 def download_pdf(request, app=None, id=None):
     import pdfkit
-    context, filename = populate_pdf_context(request, app, id)
+    context, filename, error = populate_pdf_context(request, app, id)
+    if error:
+        return error
     html_content = loader.render_to_string('report_template.html', context)
     css_list = [
         os.path.join(settings.STATIC_ROOT, 'report_template_pdfkit.css'),
