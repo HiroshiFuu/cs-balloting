@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools-items %}
+<a href="{% url 'ballot:preview_pdf' 'LP' %}" class="btn" target="_blank">
+  Preview PDF
+</a>
+<a href="{% url 'ballot:download_pdf' 'LP' %}" class="btn" target="_blank">
+  Download PDF
+</a>
+{{ block.super }}
+{% endblock %}

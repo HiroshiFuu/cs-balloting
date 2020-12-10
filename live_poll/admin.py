@@ -28,6 +28,7 @@ class LivePollItemInline(admin.StackedInline):
 
 @admin.register(LivePoll)
 class LivePollAdmin(ExportMixin, admin.ModelAdmin):
+    change_list_template = 'change_list.html'
     list_display = [
         'title',
         'is_chosen',
@@ -202,7 +203,7 @@ class LivePollResultAdmin(ExportMixin, admin.ModelAdmin):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
             return qs
-        return qs.filter(live_poll__poll__company=request.user.company)
+        return qs.filter(live_poll__company=request.user.company)
 
 
 @admin.register(LivePollBatch)
