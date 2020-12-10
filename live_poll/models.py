@@ -46,7 +46,7 @@ class LivePollItem(LogMixin):
 
 
 class LivePollBatch(LogMixin):
-    poll = models.ForeignKey(LivePoll, related_name='batches', on_delete=models.PROTECT)
+    poll = models.ForeignKey(LivePoll, related_name='batchs', on_delete=models.PROTECT)
     batch_no = models.PositiveIntegerField('Batch No.')
 
     class Meta:
@@ -63,7 +63,7 @@ class LivePollItemVote(LogMixin):
     ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
     user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
     poll_item = models.ForeignKey(LivePollItem, related_name='item_votes', on_delete=models.PROTECT)
-    poll_batch = models.ForeignKey(LivePollBatch, related_name='item_batches', on_delete=models.PROTECT, null=True, blank=True)
+    poll_batch = models.ForeignKey(LivePollBatch, related_name='batch_votes', on_delete=models.PROTECT, null=True, blank=True)
     vote_option = models.PositiveSmallIntegerField('Vote Option')
     proxy_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='proxy_user_votes', on_delete=models.PROTECT, null=True, blank=True)
 
@@ -77,9 +77,9 @@ class LivePollItemVote(LogMixin):
 
 
 class LivePollProxy(LogMixin):
-    poll_batch = models.ForeignKey(LivePollBatch, related_name='proxy_batches', on_delete=models.PROTECT, null=True, blank=True)
-    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='main_user')
-    proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='proxy_users')
+    poll_batch = models.ForeignKey(LivePollBatch, related_name='poll_batch_proxys', on_delete=models.PROTECT, null=True, blank=True)
+    main_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='main_user_proxys')
+    proxy_users = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='proxy_users_proxys')
 
     class Meta:
         managed = True
