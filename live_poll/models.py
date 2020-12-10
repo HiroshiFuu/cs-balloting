@@ -22,7 +22,7 @@ class LivePoll(LogMixin):
         verbose_name_plural = 'Live Polls'
 
     def __str__(self):
-        return '{}: {} {}'.format(self.company, self.title, self.is_chosen)
+        return '{}: {}'.format(self.company, self.title)
 
 
 class LivePollItem(LogMixin):
@@ -55,16 +55,17 @@ class LivePollBatch(LogMixin):
         verbose_name_plural = 'Live Poll Batches'
 
     def __str__(self):
-        return '{}. {}'.format(self.poll, self.batch_no)
+        return '{}-{}'.format(self.poll, self.batch_no)
 
 
 class LivePollItemVote(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_votes', on_delete=models.PROTECT)
     ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
     user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
     poll_item = models.ForeignKey(LivePollItem, related_name='item_votes', on_delete=models.PROTECT)
     poll_batch = models.ForeignKey(LivePollBatch, related_name='item_batches', on_delete=models.PROTECT, null=True, blank=True)
     vote_option = models.PositiveSmallIntegerField('Vote Option')
+    proxy_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='proxy_user_votes', on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -91,9 +92,9 @@ class LivePollProxy(LogMixin):
 
 
 class LivePollResult(LogMixin):
-    live_poll = models.OneToOneField(LivePollItem, on_delete=models.PROTECT)
+    live_poll = models.OneToOneField(LivePoll, on_delete=models.PROTECT)
     result = JSONField(blank=True, null=True)
-    voting_date = models.DateField(verbose_name='Voting Date', blank=True, null=True)
+    voting_date = models.DateField(verbose_name='Voting Date', auto_now=True)
 
     class Meta:
         managed = True
@@ -109,10 +110,10 @@ def auto_initiate_order_after_save(sender, instance, created, **kwargs):
     """
     Initiate LivePollItem order when object is saved.
     """
-    print('auto_initiate_order_after_save LivePollItem', created)
+    # print('auto_initiate_order_after_save LivePollItem', created)
     if created:
         order_offset = instance.poll.id * 100
         cur_order = instance.poll.items.all().count()
-        print('order_offset cur_order', order_offset, cur_order)
+        # print('order_offset cur_order', order_offset, cur_order)
         instance.order = order_offset + cur_order
         instance.save()

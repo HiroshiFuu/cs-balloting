@@ -77,7 +77,7 @@ class LivePollMultipleProxy(LogMixin):
 class LivePollMultipleResult(LogMixin):
     live_poll = models.OneToOneField(LivePollMultiple, on_delete=models.PROTECT)
     result = JSONField(blank=True, null=True)
-    voting_date = models.DateField(verbose_name='Voting Date', blank=True, null=True)
+    voting_date = models.DateField(verbose_name='Voting Date', auto_now=True)
 
     class Meta:
         managed = True

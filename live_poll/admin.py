@@ -141,6 +141,7 @@ class LivePollItemVoteAdmin(ExportMixin, admin.ModelAdmin):
         'ip_address',
         'user_agent',
         'created_at',
+        'proxy_user',
     ]
     list_filter = [CompanyLivePollItemBatchListFilter, CompanyLivePollItemListFilter]
     search_fields = ['user__username', 'poll_item__text', 'poll_item__poll_title', 'poll_batch__batch_no']
