@@ -3,6 +3,8 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
+from django.urls import reverse
 
 from import_export.admin import ExportMixin
 from adminsortable2.admin import SortableAdminMixin
@@ -28,10 +30,10 @@ class LivePollItemInline(admin.StackedInline):
 
 @admin.register(LivePoll)
 class LivePollAdmin(ExportMixin, admin.ModelAdmin):
-    change_list_template = 'change_list.html'
     list_display = [
         'title',
         'is_chosen',
+        'agm_audit_report_actions',
     ]
     inlines = [
         LivePollItemInline
@@ -59,6 +61,10 @@ class LivePollAdmin(ExportMixin, admin.ModelAdmin):
         if change:
             LivePoll.objects.update(is_chosen=False)
         super().save_model(request, obj, form, change)
+
+    def agm_audit_report_actions(self, obj):
+        return format_html('<a href="{preview_url}" target="_blank" class="btn">{preview_text}</a>&nbsp;<a href="{download_url}" target="_blank" class="btn">{download_text}</a>', preview_url=reverse('ballot:preview_pdf', kwargs={'app': 'LP', 'id': obj.id}), preview_text=_("Preview AGM Audit Report"), download_url=reverse('ballot:download_pdf', kwargs={'app': 'LP', 'id': obj.id}), download_text=_("Download AGM Audit Report"))
+    agm_audit_report_actions.short_description = _("AGM Audit Report Actions")
 
 
 @admin.register(LivePollItem)
