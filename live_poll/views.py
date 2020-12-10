@@ -96,95 +96,68 @@ def live_voting(request):
         poll_details = {}
         has_voting_opened = False
         if poll:
+            # compute_live_poll_voting_result(poll)
             count_users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True).count()
             poll_details['id'] = poll.id
             poll_details['title'] = poll.title
-            batch = LivePollBatch.objects.filter(poll=poll).order_by('-batch_no').first()
+            batch = poll.batchs.order_by('-batch_no').first()
             items = []
             batch_no = None
             if batch is not None:
                 batch_no = batch.batch_no
-                poll_items = LivePollItem.objects.filter(poll=poll)
-                for poll_item in poll_items:
+                for poll_item in poll.items.all():
                     item = {}
                     item['id'] = poll_item.id
                     item['text'] = poll_item.text
                     item['is_open'] = poll_item.is_open
                     item['type'] = poll_item.poll_type
-                    item_result = {}
 
-                    # for_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch))
-                    for_count = 0
+                    item_result = {}
+                    for_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch)
+                    for_count = for_votes.count()
                     for_addon_count = 0
-                    for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch):
-                        for_count += 1
-                        proxy = LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).first()
-                        proxy_users = []
-                        proxy_users_count = 0
-                        if proxy is not None:
-                            proxy_users = proxy.proxy_users.all()
-                            proxy_users_count = proxy_users.count()
-                        if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                    if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                        for_addon_count = for_votes.filter(proxy_user=None).count()
+                    if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                        for vote in for_votes:
                             for_addon_count += vote.user.weight
-                            for_count += proxy_users_count
-                            for proxy_user in proxy_users:
-                                for_addon_count += proxy_user.weight
-                        if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            for_addon_count += proxy_users_count
                     item_result['for'] = for_count
                     item_result['for_addon'] = for_addon_count
-                    # abstain_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch))
-                    abstain_count = 0
+
+                    abstain_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch)
+                    abstain_count = abstain_votes.count()
                     abstain_addon_count = 0
-                    for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch):
-                        abstain_count += 1
-                        proxy = LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).first()
-                        proxy_users = []
-                        proxy_users_count = 0
-                        if proxy is not None:
-                            proxy_users = proxy.proxy_users.all()
-                            proxy_users_count = proxy_users.count()
-                        if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                    if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                        abstain_addon_count = abstain_votes.filter(proxy_user=None).count()
+                    if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                        for vote in abstain_votes:
                             abstain_addon_count += vote.user.weight
-                            abstain_count += proxy_users_count
-                            for proxy_user in proxy_users:
-                                abstain_addon_count += proxy_user.weight
-                        if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            abstain_addon_count += proxy_users_count
                     item_result['abstain'] = abstain_count
                     item_result['abstain_addon'] = abstain_addon_count
-                    # against_count = len(LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch))
-                    against_count = 0
+
+                    against_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch)
+                    against_count = against_votes.count()
                     against_addon_count = 0
-                    for vote in LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch):
-                        against_count += 1
-                        proxy = LivePollProxy.objects.filter(main_user=vote.user, poll_batch=batch).first()
-                        proxy_users = []
-                        proxy_users_count = 0
-                        if proxy is not None:
-                            proxy_users = proxy.proxy_users.all()
-                            proxy_users_count = proxy_users.count()
-                        if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                    if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                        against_addon_count = against_votes.filter(proxy_user=None).count()
+                    if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                        for vote in against_votes:
                             against_addon_count += vote.user.weight
-                            against_count += proxy_users_count
-                            for proxy_user in proxy_users:
-                                against_addon_count += proxy_user.weight
-                        if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                            against_addon_count += proxy_users_count
                     item_result['against'] = against_count
                     item_result['against_addon'] = against_addon_count
-
-                    item_result['miss'] = count_users - for_count - abstain_count - against_count
                     item['result'] = item_result
-                    item['addon'] = 0
+                    
+                    item['miss'] = count_users - for_votes.count() - abstain_votes.count() - against_votes.count()
+                    item['miss_addon'] = 0
                     if poll_item.poll_type == POLL_TYPE_BY_SHARE:
                         for user in AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True):
-                            item['addon'] += user.weight
+                            item['miss_addon'] += user.weight
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                        for proxy_user in LivePollProxy.objects.filter(main_user__company=user_company, poll_batch=batch):
-                            item['addon'] += proxy_user.proxy_users.count()
-                    item['miss_addon'] = item['addon'] - for_addon_count - abstain_addon_count - against_addon_count
+                        for proxy_user in batch.poll_batch_proxys.all():
+                            item['miss_addon'] += proxy_user.proxy_users.count()
+                    item['miss_addon'] = item['miss_addon'] - for_addon_count - abstain_addon_count - against_addon_count
                     items.append(item)
+
                     if poll_item.is_open:
                         has_voting_opened = True
             poll_details['items'] = items
@@ -255,21 +228,26 @@ def live_voting_openning_json(request):
 
 @login_required(login_url='/login/')
 def live_poll_vote(request, live_poll_id):
-    live_poll = get_object_or_404(LivePollItem, pk=live_poll_id)
+    poll_item = get_object_or_404(LivePollItem, pk=live_poll_id)
     # print('live_poll_option', request.POST['live_poll_option'])
     try:
         live_poll_option = int(request.POST['live_poll_option'])
         # print(live_poll_option)
         # print(request.user.weight)
-        batch = LivePollBatch.objects.filter(poll=live_poll.poll).order_by('-batch_no').first()
-        vote = LivePollItemVote.objects.filter(user=request.user, poll_item=live_poll, vote_option=live_poll_option, poll_batch=batch).first()
+        live_poll = poll_item.poll
+        batch = LivePollBatch.objects.filter(poll=live_poll).order_by('-batch_no').first()
+        vote = LivePollItemVote.objects.filter(user=request.user, poll_item=poll_item, vote_option=live_poll_option, poll_batch=batch).first()
         if vote is None:
             # print(get_client_ip(request), get_client_agent(request))
-            LivePollItemVote.objects.create(user=request.user, poll_item=live_poll, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request), poll_batch=batch)
-            # compute_live_poll_voting_result(live_poll)
+            LivePollItemVote.objects.create(user=request.user, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+            proxy = LivePollProxy.objects.filter(poll_batch=batch, main_user=request.user).first()
+            if proxy is not None:
+                for proxy_user in proxy.proxy_users.all():
+                    LivePollItemVote.objects.create(user=proxy_user, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request), proxy_user=request.user)
+            compute_live_poll_voting_result(live_poll)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
         else:
-            print('Something Wrong', 'live_poll vote', live_poll_id)
+            print('Something Wrong', 'live_poll_vote', live_poll_id)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
     except (KeyError, LivePollItem.DoesNotExist, LivePollItem.DoesNotExist):
         return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
@@ -278,17 +256,22 @@ def live_poll_vote(request, live_poll_id):
 
 def compute_live_poll_voting_result(live_poll):
     live_poll_result, created = LivePollResult.objects.get_or_create(live_poll=live_poll)
-    results = []
-    for i in range(3):
-        result = {'votes': 0, 'counts': 0}
-        result['option'] = i
-        voting = LivePollItemVote.objects.filter(vote_option=i).values('poll_item__text').annotate(
-            num_votes=Count('poll_item__id'), total_votes=Sum('user__weight'))
-        # print(voting)
-        if voting.exists():
-            result['votes'] = voting[0]['total_votes']
-            result['counts'] = voting[0]['num_votes']
-        results.append(result)
-    print('compute_live_poll_voting_result', results)
-    live_poll_result.result = results
+    item_result = {}
+    # print(LivePollItemVote.objects.filter(poll_item__poll=live_poll).values('poll_item', 'vote_option').annotate(num_votes=Count('vote_option'), total_votes=Sum('user__weight')))
+    for item in live_poll.items.order_by('order'):
+        results = []
+        for i in [1, 2, 3]:
+            result = {'option': i, 'votes': 0}
+            votes = item.item_votes.filter(vote_option=i)
+            if item.poll_type == POLL_TYPE_BY_SHARE:
+                for vote in votes:
+                    result['votes'] += vote.user.weight
+                result['counts'] = votes.count()
+            if item.poll_type == POLL_TYPE_BY_LOT:
+                result['votes'] = votes.count()
+                result['proxy_votes'] = votes.exclude(proxy_user=None).count()
+            results.append(result)
+        item_result[item.text] = results
+    # print('compute_live_poll_voting_result', item_result)
+    live_poll_result.result = item_result
     live_poll_result.save()

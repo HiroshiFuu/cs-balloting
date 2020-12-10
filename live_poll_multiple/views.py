@@ -87,7 +87,7 @@ def live_voting_multiple(request):
                 item = {}
                 item['text'] = poll_item.text
                 votes = poll_item.multiple_item_votes.all()
-                item['votes'] = votes.filter(proxy_user=None).count()
+                item['votes'] = votes.count()
                 item['votes_addon'] = votes.exclude(proxy_user=None).count()
                 # for vote in votes:
                 #     proxy = LivePollMultipleProxy.objects.filter(main_user=vote.user, live_poll=poll).first()
