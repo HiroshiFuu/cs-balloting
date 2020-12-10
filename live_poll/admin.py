@@ -169,6 +169,8 @@ class LivePollProxyAdmin(ExportMixin, admin.ModelAdmin):
         if db_field.name == 'main_user':
             if not request.user.is_superuser:
                 kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+        if db_field.name == 'poll_batch':
+            kwargs['queryset'] = LivePollBatch.objects.filter(poll__company=request.user.company)
         return super(LivePollProxyAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
     def formfield_for_dbfield(self, db_field, request=None, **kwargs):
