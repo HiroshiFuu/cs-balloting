@@ -4,7 +4,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils.html import format_html
 from django.urls import reverse
 
-from import_export.admin import ImportExportModelAdmin, ExportMixin
+from import_export.admin import ExportMixin
 from inline_actions.admin import InlineActionsModelAdminMixin
 
 from .models import LivePollMultiple
@@ -95,7 +95,7 @@ class LivePollMultipleItemAdmin(ExportMixin, admin.ModelAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
-class CompanyLivePollListFilter(admin.SimpleListFilter):
+class CompanyLivePollMultipleListFilter(admin.SimpleListFilter):
     # Human-readable title which will be displayed in the
     # right admin sidebar just above the filter options.
     title = _('Poll')
@@ -115,11 +115,11 @@ class CompanyLivePollListFilter(admin.SimpleListFilter):
         """
         list_of_polls = []
         queryset = LivePollMultiple.objects.filter(company=request.user.company)
-        for polls in queryset:
+        for poll in queryset:
             list_of_polls.append(
-                (str(polls.id), str(polls.batch_no) + ' ' + str(polls.text))
+                (str(poll.id), str(poll.batch_no) + ' ' + str(poll.text))
             )
-        # print('CompanyLivePollListFilter', list_of_polls, sorted(list_of_polls, key=lambda tp: tp[0]))
+        # print('CompanyLivePollMultipleListFilter', list_of_polls, sorted(list_of_polls, key=lambda tp: tp[0]))
         return sorted(list_of_polls, key=lambda tp: tp[0])
 
     def queryset(self, request, queryset):
@@ -145,7 +145,7 @@ class LivePollMultipleItemVoteAdmin(ExportMixin, admin.ModelAdmin):
         'proxy_user',
         'is_proxy_vote',
     ]
-    list_filter = [CompanyLivePollListFilter]
+    list_filter = [CompanyLivePollMultipleListFilter]
     search_fields = ['user__username', 'live_poll_item__text', 'live_poll_item__poll_title']
     ordering = ['created_at']
     exclude = ('created_by', 'modified_by')
