@@ -67,18 +67,14 @@ def populate_pdf_context(request, app=None, id=None):
                         'total_shares': total_shares, 'survey': None}
 
         if app == 'LPM':
-            if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).first() is None:
+            votes = LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).order_by('created_at')
+            if not votes:
                 return None, None, HttpResponse('There is no vote yet!')
 
             context['app'] = '(Live Poll Multiple)'
             agm_overview['batch_no'] = obj.batch_no
-
-            votes = LivePollMultipleItemVote.objects.filter(
-                live_poll_item__live_poll=obj).order_by('created_at')
-            first_vote = votes.first()
-            last_vote = votes.last()
-            agm_overview['meeting_started'] = first_vote.created_at
-            agm_overview['meeting_closed'] = last_vote.created_at
+            agm_overview['meeting_started'] = obj.opened_at
+            agm_overview['meeting_closed'] = votes.last().created_at
 
             context['agm_overview'] = agm_overview
             context['page_no'] = page_no = 1
@@ -134,18 +130,17 @@ def populate_pdf_context(request, app=None, id=None):
             context['record_pages'] = lpm_record_pages
 
         if app == 'LP':
-            if LivePollItemVote.objects.filter(poll_item__poll=obj).first() is None:
+            batch = obj.batchs.order_by('-batch_no').first()
+            if not batch:
+                return None, None, HttpResponse('There is no batch yet!')
+            votes = batch.batch_votes.order_by('created_at')
+            if not votes:
                 return None, None, HttpResponse('There is no vote yet!')
 
             context['app'] = '(Live Poll)'
-            batch = obj.batchs.order_by('-batch_no').first()
             agm_overview['batch_no'] = batch.batch_no
-
-            votes = batch.batch_votes.order_by('created_at')
-            first_vote = votes.first()
-            last_vote = votes.last()
-            agm_overview['meeting_started'] = first_vote.created_at
-            agm_overview['meeting_closed'] = last_vote.created_at
+            agm_overview['meeting_started'] = obj.items.order_by('-opened_at').first().created_at
+            agm_overview['meeting_closed'] = votes.last().created_at
 
             context['agm_overview'] = agm_overview
             context['page_no'] = page_no = 1
@@ -208,25 +203,21 @@ def populate_pdf_context(request, app=None, id=None):
             context['record_pages'] = lp_record_pages
 
         if app == 'SV':
-            votes = SurveyVote.objects.filter(survey_option__survey=obj)
-            if not votes:
+            if not SurveyVote.objects.filter(survey_option__survey=obj):
                 return None, None, HttpResponse('There is no vote yet!')
 
             context['app'] = '(Survey)'
             agm_overview['batch_no'] = obj.id
             agm_overview['survey'] = obj.title
-
-            first_vote = votes.first()
-            last_vote = votes.last()
-            agm_overview['meeting_started'] = first_vote.created_at
-            agm_overview['meeting_closed'] = last_vote.created_at
+            agm_overview['meeting_started'] = 'N/A'
+            agm_overview['meeting_closed'] = 'N/A'
 
             context['agm_overview'] = agm_overview
             context['page_no'] = page_no = 1
 
             sv_attendee_pages = {}
             for idx, user in enumerate(users, start=0):
-                survey_user_votes = user.survey_user_votes
+                survey_user_votes = user.survey_user_votes.filter(survey_option__survey=obj)
                 if not survey_user_votes:
                     continue
                 if idx % 2 == 0:
@@ -248,7 +239,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             sv_record_pages = {}
             record_count = 0
-            for idx_item, option in enumerate(obj.survey_options, start=0):
+            for idx_item, option in enumerate(obj.survey_options.all(), start=0):
                 for idx_user, user in enumerate(users, start=0):
                     if record_count % 2 == 0:
                         page_no += 1
@@ -263,6 +254,7 @@ def populate_pdf_context(request, app=None, id=None):
                     if vote is not None:
                         sv_record['voted_at'] = vote.created_at
                         sv_record['ip_address'] = vote.ip_address
+                        sv_record['vote_option'] = 'Voted'
                     record_count += 1
                     sv_records.append(sv_record)
                     sv_record_pages[str(page_no)]['records'] = sv_records

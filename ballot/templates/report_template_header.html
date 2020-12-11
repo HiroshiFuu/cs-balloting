@@ -1,4 +1,4 @@
     <h1>AGM Audit Report {{ app }} {{ id }}</h1>
     <sub_title class="underline">
-      Annual General Meeting of the Management Corportation Strata Title Plan {% if not record.survey %}No. {{ agm_overview.batch_no }}{% else %}{{ agm_overview.survey }}{% endif %}
+      Annual General Meeting of the Management Corportation Strata Title Plan {% if not agm_overview.survey %}No. {{ agm_overview.batch_no }}{% else %}{{ agm_overview.survey }}{% endif %}
     </sub_title>
