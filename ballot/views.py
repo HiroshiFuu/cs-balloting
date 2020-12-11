@@ -57,12 +57,14 @@ def populate_pdf_context(request, app=None, id=None):
     context = {}
     filename = None
     if app is not None:
-        users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
+        users = AuthUser.objects.filter(
+            user_type=USER_TYPE_USER, company=user_company, is_active=True)
         total_lots = users.count()
         total_shares = 0
         for user in users:
             total_shares += user.weight
-        agm_overview = {'total_lots': total_lots, 'total_shares': total_shares, 'survey': None}
+        agm_overview = {'total_lots': total_lots,
+                        'total_shares': total_shares, 'survey': None}
 
         if app == 'LPM':
             if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).first() is None:
@@ -71,7 +73,8 @@ def populate_pdf_context(request, app=None, id=None):
             context['app'] = '(Live Poll Multiple)'
             agm_overview['batch_no'] = obj.batch_no
 
-            votes = LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).order_by('created_at')
+            votes = LivePollMultipleItemVote.objects.filter(
+                live_poll_item__live_poll=obj).order_by('created_at')
             first_vote = votes.first()
             last_vote = votes.last()
             agm_overview['meeting_started'] = first_vote.created_at
@@ -91,7 +94,8 @@ def populate_pdf_context(request, app=None, id=None):
                 lpm_attendee['name'] = vote.user.username
                 for proxy in LivePollMultipleProxy.objects.filter(live_poll=obj):
                     if vote.user in proxy.proxy_users.all():
-                        lpm_attendee['name'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        lpm_attendee['name'] += ' (Proxy ' + \
+                            proxy.main_user.username + ')'
                         break
                 lpm_attendee['phone_no'] = vote.user.phone_no
                 lpm_attendee['voted_at'] = vote.created_at
@@ -112,9 +116,11 @@ def populate_pdf_context(request, app=None, id=None):
                         lpm_records = []
                     lpm_record = {}
                     lpm_record['voter'] = user.unit_no + ' ' + user.username
-                    proxy = user.multiple_proxy_users_proxys.filter(live_poll=obj).first()
+                    proxy = user.multiple_proxy_users_proxys.filter(
+                        live_poll=obj).first()
                     if proxy is not None:
-                        lpm_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        lpm_record['voter'] += ' (Proxy ' + \
+                            proxy.main_user.username + ')'
                     lpm_record['voted_at'] = None
                     lpm_record['ip_address'] = None
                     vote = item.multiple_item_votes.filter(user=user).first()
@@ -158,7 +164,8 @@ def populate_pdf_context(request, app=None, id=None):
                 lp_attendee['name'] = user.username
                 for proxy in LivePollProxy.objects.filter(poll_batch=batch):
                     if user in proxy.proxy_users.all():
-                        lp_attendee['name'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        lp_attendee['name'] += ' (Proxy ' + \
+                            proxy.main_user.username + ')'
                         break
                 lp_attendee['phone_no'] = user.phone_no
                 vote = user_votes.first()
@@ -180,13 +187,16 @@ def populate_pdf_context(request, app=None, id=None):
                         lp_records = []
                     lp_record = {}
                     lp_record['voter'] = user.unit_no + ' ' + user.username
-                    proxy = user.proxy_users_proxys.filter(poll_batch=batch).first()
+                    proxy = user.proxy_users_proxys.filter(
+                        poll_batch=batch).first()
                     if proxy is not None:
-                        lp_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
+                        lp_record['voter'] += ' (Proxy ' + \
+                            proxy.main_user.username + ')'
                     lp_record['voted_at'] = None
                     lp_record['ip_address'] = None
                     lp_record['vote_option'] = -1
-                    vote = item.item_votes.filter(user=user, poll_batch=batch).first()
+                    vote = item.item_votes.filter(
+                        user=user, poll_batch=batch).first()
                     if vote is not None:
                         lp_record['voted_at'] = vote.created_at
                         lp_record['ip_address'] = vote.ip_address
@@ -259,7 +269,8 @@ def populate_pdf_context(request, app=None, id=None):
             # print('render_pdf', 'sv_record_pages', sv_record_pages)
             context['record_pages'] = sv_record_pages
 
-        filename = '{} {} {}.pdf'.format(user_company, context['app'], agm_overview['batch_no'])
+        filename = '{} {} {}.pdf'.format(
+            user_company, context['app'], agm_overview['batch_no'])
         filename = str(filename).replace(' ', '_')
 
     # print('populate_pdf_context', context, str(filename))
@@ -308,7 +319,8 @@ def download_pdf(request, app=None, id=None):
     fs = FileSystemStorage(settings.MEDIA_ROOT)
     with fs.open(filename) as pdf:
         response = HttpResponse(pdf, content_type='application/pdf')
-        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(
+            filename)
         return response
     return response
 
@@ -358,7 +370,8 @@ def dashboard(request):
         else:
             surveys = Survey.objects.all().filter(company=user_company)
         surveys_details = []
-        count_users = len(AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True))
+        count_users = len(AuthUser.objects.filter(
+            user_type=USER_TYPE_USER, company=user_company, is_active=True))
         for survey in surveys:
             survey_details = {}
             survey_details['id'] = survey.id
@@ -367,7 +380,8 @@ def dashboard(request):
             count_votes = len(SurveyVote.objects.filter(
                 survey_option__survey=survey))
             if count_users > 0:
-                survey_details['complete_rate'] = count_votes * 1.0 / count_users
+                survey_details['complete_rate'] = count_votes * \
+                    1.0 / count_users
             else:
                 survey_details['complete_rate'] = 0
             survey_details['complete'] = survey_details['complete_rate'] * 100
@@ -401,7 +415,8 @@ def dashboard(request):
         survey_chart = surveys.first()
         survey_chart_data = {}
         if survey_chart is not None:
-            survery_result = SurveyResult.objects.filter(survey=survey_chart).first()
+            survery_result = SurveyResult.objects.filter(
+                survey=survey_chart).first()
             if survery_result is not None:
                 data = survery_result.result
             else:
@@ -426,7 +441,8 @@ def dashboard(request):
             voting_detail['username'] = vote.user.username
             live_poll_votings.append(voting_detail)
             if vote.poll_item.poll_type == POLL_TYPE_BY_LOT:
-                proxy = LivePollProxy.objects.filter(main_user=vote.user).first()
+                proxy = LivePollProxy.objects.filter(
+                    main_user=vote.user).first()
                 if proxy:
                     for user in proxy.proxy_users.all():
                         voting_detail = {}
@@ -435,7 +451,8 @@ def dashboard(request):
                         voting_detail['item'] = vote.poll_item.text
                         voting_detail['option'] = vote.vote_option
                         voting_detail['created_at'] = vote.created_at
-                        voting_detail['username'] = user.username + '(' + vote.user.username + ')'
+                        voting_detail['username'] = user.username + \
+                            '(' + vote.user.username + ')'
                         live_poll_votings.append(voting_detail)
         # print('live_poll_votings', live_poll_votings)
         return render(request, 'dashboard.html', {'surveys_details': surveys_details, 'survey_chart_data': survey_chart_data, 'survey_votings': survey_votings, 'live_poll_votings': live_poll_votings})

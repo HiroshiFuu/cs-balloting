@@ -187,7 +187,8 @@ def live_poll_multiple_vote(request, live_poll_id):
                 live_poll_item = LivePollMultipleItem.objects.get(id=live_poll_item_id)
                 # print(live_poll_item)
                 # print(get_client_ip(request), get_client_agent(request))
-                LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+                LivePollMultipleItemVote.objects.create(user=request.user, live_poll_item=live_poll_item, ip_address = get_client_ip(request), user_agent = get_client_agent(request)
+)
                 proxy = LivePollMultipleProxy.objects.filter(live_poll=live_poll, main_user=request.user).first()
                 if proxy is not None:
                     for proxy_user in proxy.proxy_users.all():
