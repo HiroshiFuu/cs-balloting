@@ -17,7 +17,7 @@ from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
-from survey.models import SurveyVote, Survey, SurveyOption
+from survey.models import SurveyVote, SurveyResult, Survey, SurveyOption
 from live_poll.models import LivePollItemVote, LivePollProxy, LivePoll, LivePollItem
 from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple, LivePollMultipleItem
 
