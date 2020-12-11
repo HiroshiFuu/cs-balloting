@@ -42,6 +42,8 @@ class SurveyOption(LogMixin):
 
 class SurveyVote(LogMixin):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='survey_user_votes', on_delete=models.PROTECT)
+    ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
+    user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
     survey_option = models.ForeignKey(
         SurveyOption, related_name='survey_option_votes', on_delete=models.PROTECT)
 
