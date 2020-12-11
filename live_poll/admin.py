@@ -59,7 +59,7 @@ class LivePollAdmin(ExportMixin, admin.ModelAdmin):
         if not change and request.user.user_type == USER_TYPE_COMPANY:
             obj.company = request.user.company
         if change:
-            LivePoll.objects.update(is_chosen=False)
+            LivePoll.objects.filter(company=request.user.company).update(is_chosen=False)
         super().save_model(request, obj, form, change)
 
     def agm_audit_report_actions(self, obj):
