@@ -198,14 +198,14 @@ def populate_pdf_context(request, app=None, id=None):
             context['record_pages'] = lp_record_pages
 
         if app == 'SV':
-            if SurveyVote.objects.filter(survey_option__survey=obj).first() is None:
+            votes = SurveyVote.objects.filter(survey_option__survey=obj)
+            if not votes:
                 return None, None, HttpResponse('There is no vote yet!')
 
             context['app'] = '(Survey)'
             agm_overview['batch_no'] = obj.id
-            agm_overview['survey'] = obj.text
+            agm_overview['survey'] = obj.title
 
-            votes = batch.batch_votes.order_by('created_at')
             first_vote = votes.first()
             last_vote = votes.last()
             agm_overview['meeting_started'] = first_vote.created_at

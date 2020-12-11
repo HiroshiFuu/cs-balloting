@@ -96,7 +96,7 @@
                 <div class="form-group">
                   <label class="form-label">Survey Options</label>
                   <div id="survey_options" class="selectgroup selectgroup-pills">
-                    {% for option in survey.options.all %}
+                    {% for option in survey.survey_options.all %}
                     <label class="selectgroup-item">
                       <input type="radio" id="option{{ forloop.counter }}" name="survey_option" value="{{ option.id }}" class="selectgroup-input">
                       <span class="selectgroup-button">{{ option.text }}</span>
