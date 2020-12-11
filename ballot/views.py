@@ -17,7 +17,7 @@ from authentication.models import AuthUser, Company
 from authentication.constants import USER_TYPE_COMPANY
 from authentication.constants import USER_TYPE_USER
 
-from survey.models import Survey, SurveyVote
+from survey.models import SurveyVote, Survey, SurveyOption
 from live_poll.models import LivePollItemVote, LivePollProxy, LivePoll, LivePollItem
 from live_poll_multiple.models import LivePollMultipleItemVote, LivePollMultipleProxy, LivePollMultiple, LivePollMultipleItem
 
@@ -44,6 +44,8 @@ def populate_pdf_context(request, app=None, id=None):
             obj = LivePollMultiple.objects.get(id=int(id))
         if app == 'LP':
             obj = LivePoll.objects.get(id=int(id))
+        if app == 'SV':
+            obj = Survey.objects.get(id=int(id))
     except Exception as e:
         print(e)
         return None, None, HttpResponse('Something Went Very Very Wrong!')
@@ -60,7 +62,7 @@ def populate_pdf_context(request, app=None, id=None):
         total_shares = 0
         for user in users:
             total_shares += user.weight
-        agm_overview = {'total_lots': total_lots, 'total_shares': total_shares}
+        agm_overview = {'total_lots': total_lots, 'total_shares': total_shares, 'survey': None}
 
         if app == 'LPM':
             if LivePollMultipleItemVote.objects.filter(live_poll_item__live_poll=obj).first() is None:
@@ -115,7 +117,8 @@ def populate_pdf_context(request, app=None, id=None):
                         lpm_record['voter'] += ' (Proxy ' + proxy.main_user.username + ')'
                     lpm_record['voted_at'] = None
                     lpm_record['ip_address'] = None
-                    if item.multiple_item_votes.filter(user=user):
+                    vote = item.multiple_item_votes.filter(user=user).first()
+                    if vote is not None:
                         lpm_record['voted_at'] = vote.created_at
                         lpm_record['ip_address'] = vote.ip_address
                     record_count += 1
@@ -193,6 +196,68 @@ def populate_pdf_context(request, app=None, id=None):
                     lp_record_pages[str(page_no)]['records'] = lp_records
             # print('render_pdf', 'lp_record_pages', lp_record_pages)
             context['record_pages'] = lp_record_pages
+
+        if app == 'SV':
+            if SurveyVote.objects.filter(survey_option__survey=obj).first() is None:
+                return None, None, HttpResponse('There is no vote yet!')
+
+            context['app'] = '(Survey)'
+            agm_overview['batch_no'] = obj.id
+            agm_overview['survey'] = obj.text
+
+            votes = batch.batch_votes.order_by('created_at')
+            first_vote = votes.first()
+            last_vote = votes.last()
+            agm_overview['meeting_started'] = first_vote.created_at
+            agm_overview['meeting_closed'] = last_vote.created_at
+
+            context['agm_overview'] = agm_overview
+            context['page_no'] = page_no = 1
+
+            sv_attendee_pages = {}
+            for idx, user in enumerate(users, start=0):
+                survey_user_votes = user.survey_user_votes
+                if not survey_user_votes:
+                    continue
+                if idx % 2 == 0:
+                    page_no += 1
+                    sv_attendee_pages[str(page_no)] = {}
+                    sv_attendees = []
+                sv_attendee = {}
+                sv_attendee['unit_no'] = user.unit_no
+                sv_attendee['name'] = user.username
+                sv_attendee['phone_no'] = user.phone_no
+                vote = survey_user_votes.first()
+                sv_attendee['voted_at'] = vote.created_at
+                sv_attendee['ip_address'] = vote.ip_address
+                sv_attendee['user_agent'] = vote.user_agent
+                sv_attendees.append(sv_attendee)
+                sv_attendee_pages[str(page_no)]['attendees'] = sv_attendees
+            # print('render_pdf', 'sv_attendee_pages', sv_attendee_pages)
+            context['attendee_pages'] = sv_attendee_pages
+
+            sv_record_pages = {}
+            record_count = 0
+            for idx_item, option in enumerate(obj.survey_options, start=0):
+                for idx_user, user in enumerate(users, start=0):
+                    if record_count % 2 == 0:
+                        page_no += 1
+                        sv_record_pages[str(page_no)] = {'text': option.text}
+                        sv_records = []
+                    sv_record = {}
+                    sv_record['voter'] = user.unit_no + ' ' + user.username
+                    sv_record['voted_at'] = None
+                    sv_record['ip_address'] = None
+                    sv_record['vote_option'] = -1
+                    vote = option.survey_option_votes.filter(user=user).first()
+                    if vote is not None:
+                        sv_record['voted_at'] = vote.created_at
+                        sv_record['ip_address'] = vote.ip_address
+                    record_count += 1
+                    sv_records.append(sv_record)
+                    sv_record_pages[str(page_no)]['records'] = sv_records
+            # print('render_pdf', 'sv_record_pages', sv_record_pages)
+            context['record_pages'] = sv_record_pages
 
         filename = '{} {} {}.pdf'.format(user_company, context['app'], agm_overview['batch_no'])
         filename = str(filename).replace(' ', '_')

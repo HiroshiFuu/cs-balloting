@@ -5,7 +5,6 @@ from django.utils.html import format_html
 from django.urls import reverse
 
 from import_export.admin import ExportMixin
-from inline_actions.admin import InlineActionsModelAdminMixin
 
 from .models import LivePollMultiple
 from .models import LivePollMultipleItem

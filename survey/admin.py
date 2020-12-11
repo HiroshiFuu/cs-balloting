@@ -1,13 +1,18 @@
 # -*- encoding: utf-8 -*-
 
 from django.contrib import admin
+from django.utils.translation import ugettext_lazy as _
+from django.utils.html import format_html
+from django.urls import reverse
 
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ExportMixin
 
 from .models import Survey
 from .models import SurveyOption
 from .models import SurveyVote
 from .models import SurveyResult
+
+from authentication.constants import USER_TYPE_COMPANY
 
 from django.conf.locale.en import formats as en_formats
 en_formats.DATE_FORMAT = "Y-m-d"
@@ -20,10 +25,11 @@ class SurveyOptionInline(admin.StackedInline):
 
 
 @admin.register(Survey)
-class SurveyAdmin(ImportExportModelAdmin):
+class SurveyAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'title',
         'end_date',
+        'agm_audit_report_actions',
     ]
     search_fields = ['title', ]
     ordering = ['-created_at']
@@ -38,9 +44,25 @@ class SurveyAdmin(ImportExportModelAdmin):
             return queryset
         return queryset.filter(company=request.user.company)
 
+    def get_readonly_fields(self, request, obj=None):
+        if request.user.is_superuser:
+            return super(SurveyAdmin, self).get_readonly_fields(request, obj)
+        else:
+            return ('company', )
+
+    def save_model(self, request, obj, form, change):
+        # print('save_model', obj, change)
+        if not change and request.user.user_type == USER_TYPE_COMPANY:
+            obj.company = request.user.company
+        super().save_model(request, obj, form, change)
+
+    def agm_audit_report_actions(self, obj):
+        return format_html('<a href="{preview_url}" target="_blank" class="btn">{preview_text}</a>&nbsp;<a href="{download_url}" target="_blank" class="btn">{download_text}</a>', preview_url=reverse('ballot:preview_pdf', kwargs={'app': 'SV', 'id': obj.id}), preview_text=_("Preview AGM Audit Report"), download_url=reverse('ballot:download_pdf', kwargs={'app': 'SV', 'id': obj.id}), download_text=_("Download AGM Audit Report"))
+    agm_audit_report_actions.short_description = _("AGM Audit Report Actions")
+
 
 @admin.register(SurveyOption)
-class SurveyOptionAdmin(ImportExportModelAdmin):
+class SurveyOptionAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'get_survey_title',
         'text',
@@ -63,7 +85,7 @@ class SurveyOptionAdmin(ImportExportModelAdmin):
 
 
 @admin.register(SurveyVote)
-class SurveyVoteAdmin(ImportExportModelAdmin):
+class SurveyVoteAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'user',
         'survey_option',
@@ -81,7 +103,7 @@ class SurveyVoteAdmin(ImportExportModelAdmin):
 
 
 @admin.register(SurveyResult)
-class SurveyResultAdmin(ImportExportModelAdmin):
+class SurveyResultAdmin(ExportMixin, admin.ModelAdmin):
     list_display = [
         'survey',
         'result',

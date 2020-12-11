@@ -28,7 +28,7 @@ class Survey(LogMixin):
 class SurveyOption(LogMixin):
     text = models.CharField(max_length=255)
     survey = models.ForeignKey(
-        Survey, related_name='options', on_delete=models.PROTECT)
+        Survey, related_name='survey_options', on_delete=models.PROTECT)
 
     class Meta:
         managed = True
@@ -41,9 +41,9 @@ class SurveyOption(LogMixin):
 
 
 class SurveyVote(LogMixin):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='survey_user_votes', on_delete=models.PROTECT)
     survey_option = models.ForeignKey(
-        SurveyOption, related_name='votes', on_delete=models.PROTECT)
+        SurveyOption, related_name='survey_option_votes', on_delete=models.PROTECT)
 
     class Meta:
         managed = True
