@@ -69,12 +69,13 @@ require(['jquery'], function() {
 
   var limit = 2;
   $("input:checkbox").click(function() {
-    var bol = $("input:checkbox:checked").length >= {{ live_poll.allocation }};
+    var bol = $("input:checkbox:checked").length >= { { live_poll.allocation } };
     $("input:checkbox").not(":checked").attr("disabled", bol);
     var bol2 = $("input:checkbox:checked").length == 0;
     $("#btnSubmit").prop("disabled", bol2);
   });
-
+  
+  var poll_status = {% if poll_item %}"open"{% else %}"close"{% endif %};
   var need_to_reload = false;
   var check_seconds_left = setInterval(function() {
     $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",
@@ -82,15 +83,17 @@ require(['jquery'], function() {
         console.log("cur_live_voting_multiple", ret);
         var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
         $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+        if (poll_status == "open" & opening_seconds_left == 0) {
+          window.location.reload(true);
+        }
+        if (poll_status == "close" & opening_seconds_left > 0) {
+          window.location.reload(true);
+        }
         if (opening_seconds_left > 0) {
           need_to_reload = true;
-        } else if (opening_seconds_left == 0) {
-          window.location.reload(true);
         } else if (opening_seconds_left == -1) {
           if (need_to_reload) {
             window.location.reload(true);
-          } else {
-            clearInterval(check_seconds_left);
           }
         }
       }

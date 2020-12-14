@@ -3,7 +3,7 @@
 {% block title %} Voting {% endblock %}
 {% block styles %}
 <style>
-.dropdown-icon {
+  .dropdown-icon {
   margin-left: 0rem;
   margin-right: 0rem;
   font-size: 44px;
@@ -76,7 +76,7 @@
             </div>
           </div>
           {% endif %}
-        </div>
+      </div>
       </form>
     </div>
   </div>
@@ -86,39 +86,39 @@
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
 <script type="text/javascript">
-  require(['jquery'], function () {
-    $(".nav-link").removeClass("active");
-    $(".nav-link.cur_live_voting").addClass("active");
+require(['jquery'], function() {
+  $(".nav-link").removeClass("active");
+  $(".nav-link.cur_live_voting").addClass("active");
 
-    $("#live_poll_options").change(function() {
-      if ($("#live_poll_options input[name='live_poll_option']:checked").val() !== null)
-        $("#btnSubmit").removeAttr("disabled");
-    });
+  $("#live_poll_options").change(function() {
+    if ($("#live_poll_options input[name='live_poll_option']:checked").val() !== null)
+      $("#btnSubmit").removeAttr("disabled");
+  });
 
-    var need_to_reload = false;
-    var check_seconds_left = setInterval(function() {
-      $.get("{% url 'live_poll:live_voting_openning_json' %}",
-        function(ret) {
-          console.log("cur_live_voting", ret);
-          var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
-          $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
-          if (opening_seconds_left > 0) {
-            need_to_reload = true;
-          }
-          else if (opening_seconds_left == 0) {
+  var poll_status = {% if poll_item %}"open"{% else %}"close"{% endif %};
+  var need_to_reload = false;
+  var check_seconds_left = setInterval(function() {
+    $.get("{% url 'live_poll:live_voting_openning_json' %}",
+      function(ret) {
+        console.log("cur_live_voting", ret);
+        var opening_seconds_left = parseInt(ret["opening_seconds_left"], 10);
+        $("#time_label").text("Time Left: " + opening_seconds_left + " seconds");
+        if (poll_status == "open" & opening_seconds_left == 0) {
+          window.location.reload(true);
+        }
+        if (poll_status == "close" & opening_seconds_left > 0) {
+          window.location.reload(true);
+        }
+        if (opening_seconds_left > 0) {
+          need_to_reload = true;
+        } else if (opening_seconds_left == -1) {
+          if (need_to_reload) {
             window.location.reload(true);
           }
-          else if (opening_seconds_left == -1) {
-            if (need_to_reload) {
-              window.location.reload(true);
-            }
-            else {
-              clearInterval(check_seconds_left);
-            }
-          }
         }
-      );
-    }, 1000);
-  });
+      }
+    );
+  }, 1000);
+});
 </script>
 {% endblock javascripts %}
