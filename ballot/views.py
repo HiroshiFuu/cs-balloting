@@ -32,6 +32,8 @@ from datetime import date, datetime
 import os
 
 VOTE_OPTIONS_MAPPING = {1: 'For', 2: 'Abstain', 3: 'Against'}
+UERS_PER_PAGE_DETAILS = 5
+UERS_PER_PAGE = 15
 
 
 @staff_member_required
@@ -81,7 +83,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             lpm_attendee_pages = {}
             for idx, vote in enumerate(votes, start=0):
-                if idx % 2 == 0:
+                if attendee_count % UERS_PER_PAGE_DETAILS == 0:
                     page_no += 1
                     lpm_attendee_pages[str(page_no)] = {}
                     lpm_attendees = []
@@ -106,7 +108,7 @@ def populate_pdf_context(request, app=None, id=None):
             record_count = 0
             for idx_item, item in enumerate(LivePollMultipleItem.objects.filter(live_poll=obj), start=0):
                 for idx_user, user in enumerate(users, start=0):
-                    if record_count % 2 == 0:
+                    if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
                         lpm_record_pages[str(page_no)] = {'text': item.text}
                         lpm_records = []
@@ -146,14 +148,16 @@ def populate_pdf_context(request, app=None, id=None):
             context['page_no'] = page_no = 1
 
             lp_attendee_pages = {}
-            for idx, user in enumerate(users, start=0):
+            attendee_count = 0
+            for user in users:
                 user_votes = user.user_votes.filter(poll_batch=batch)
                 if not user_votes:
                     continue
-                if idx % 2 == 0:
+                if attendee_count % UERS_PER_PAGE_DETAILS == 0:
                     page_no += 1
                     lp_attendee_pages[str(page_no)] = {}
                     lp_attendees = []
+                attendee_count += 1
                 lp_attendee = {}
                 lp_attendee['unit_no'] = user.unit_no
                 lp_attendee['name'] = user.username
@@ -176,7 +180,7 @@ def populate_pdf_context(request, app=None, id=None):
             record_count = 0
             for idx_item, item in enumerate(LivePollItem.objects.filter(poll=obj), start=0):
                 for idx_user, user in enumerate(users, start=0):
-                    if record_count % 2 == 0:
+                    if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
                         lp_record_pages[str(page_no)] = {'text': item.text}
                         lp_records = []
@@ -216,14 +220,16 @@ def populate_pdf_context(request, app=None, id=None):
             context['page_no'] = page_no = 1
 
             sv_attendee_pages = {}
-            for idx, user in enumerate(users, start=0):
+            attendee_count = 0
+            for user in users:
                 survey_user_votes = user.survey_user_votes.filter(survey_option__survey=obj)
                 if not survey_user_votes:
                     continue
-                if idx % 2 == 0:
+                if attendee_count % UERS_PER_PAGE_DETAILS == 0:
                     page_no += 1
                     sv_attendee_pages[str(page_no)] = {}
                     sv_attendees = []
+                attendee_count += 1
                 sv_attendee = {}
                 sv_attendee['unit_no'] = user.unit_no
                 sv_attendee['name'] = user.username
@@ -241,7 +247,7 @@ def populate_pdf_context(request, app=None, id=None):
             record_count = 0
             for idx_item, option in enumerate(obj.survey_options.all(), start=0):
                 for idx_user, user in enumerate(users, start=0):
-                    if record_count % 2 == 0:
+                    if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
                         sv_record_pages[str(page_no)] = {'text': option.text}
                         sv_records = []
