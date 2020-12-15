@@ -50,16 +50,17 @@ class AuthGroupAdmin(GroupAdmin):
 
 class LotDetailsInline(admin.TabularInline):
     model = Lot
+    fk_name = 'user'
     extra = 0
     per_page = 3
 
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company', 'username', 'weight',
-                    'phone_no', 'is_company_user', 'is_active']
-    ordering = ('username',)
-    list_display_links = ('username',)
+    list_display = ['company', 'username', 'weight', 'phone_no',
+                    '_has_lot', 'lots_details', 'is_company_user', 'is_active']
+    ordering = ('company', 'username')
+    list_display_links = ('company', 'username')
     fieldsets = (
         (None, {'fields': ['username', 'weight', 'user_type', 'company']}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'phone_no')}),
@@ -143,7 +144,7 @@ class LotAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             return queryset
-        return queryset.filter(company=request.user.company)
+        return queryset.filter(user__company=request.user.company)
 
 
 # @admin.register(CompanyUser)

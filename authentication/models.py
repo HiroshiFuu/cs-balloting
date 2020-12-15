@@ -58,7 +58,13 @@ class AuthUser(AbstractUser):
 
     def lots_details(self):
         "Returns the person's lots details."
-        return [lot.block_no + ' ' + lot.unit_no for lot in self.user_lots]
+        return [lot.block_no + ' ' + lot.unit_no for lot in self.user_lots.all()]
+
+    def _has_lot(self):
+        "Returns whether the person owns a nuit."
+        return self.user_lots != None 
+    _has_lot.boolean = True
+    has_lot = property(_has_lot)
 
 
 class Lot(LogMixin):
