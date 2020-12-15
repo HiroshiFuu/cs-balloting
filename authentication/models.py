@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.conf import settings
 
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
@@ -44,9 +45,8 @@ class AuthUser(AbstractUser):
         'User Type', choices=USER_TYPES, null=True)
     company = models.ForeignKey(
         Company, on_delete=models.CASCADE, null=True, blank=True)
-    phone_no = models.CharField('Phone Number', max_length=31, null=True, blank=True)
-    block_no = models.CharField('Block Number', max_length=7, null=True, blank=True)
-    unit_no = models.CharField('Unit Number', max_length=15, null=True, blank=True)
+    phone_no = models.CharField(
+        'Phone Number', max_length=31, null=True, blank=True)
 
     class Meta:
         managed = True
@@ -55,6 +55,27 @@ class AuthUser(AbstractUser):
 
     def __str__(self):
         return '{} {} {}'.format(self.username, self.user_type, self.company)
+
+    def lots_details(self):
+        "Returns the person's lots details."
+        return [lot.block_no + ' ' + lot.unit_no for lot in self.user_lots]
+
+
+class Lot(LogMixin):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             related_name='user_lots', on_delete=models.CASCADE)
+    block_no = models.CharField(
+        'Block Number', max_length=7, null=True, blank=True)
+    unit_no = models.CharField(
+        'Unit Number', max_length=15, null=True, blank=True)
+
+    class Meta:
+        managed = True
+        verbose_name = 'Lot'
+        verbose_name_plural = 'Lots'
+
+    def __str__(self):
+        return '{}: {} {}'.format(self.user, self.block_no, self.unit_no)
 
 
 class AuthGroup(Group):

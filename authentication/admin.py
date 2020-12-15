@@ -10,6 +10,7 @@ from django.db.models import Q
 from .models import Company
 from .models import AuthUser
 from .models import AuthGroup
+from .models import Lot
 
 from .forms import CustomCompanyCreationForm
 from .forms import CustomUserCreationForm
@@ -43,27 +44,37 @@ class AuthGroupAdmin(GroupAdmin):
     def formfield_for_manytomany(self, db_field, request, **kwargs):
         form_field = super().formfield_for_manytomany(db_field, request, **kwargs)
         if db_field.name in [*self.filter_horizontal]:
-            form_field.widget.attrs={'size': '10'}
+            form_field.widget.attrs = {'size': '10'}
         return form_field
+
+
+class LotDetailsInline(admin.TabularInline):
+    model = Lot
+    extra = 0
+    per_page = 3
 
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company', 'username', 'weight', 'phone_no', 'block_no', 'unit_no', 'is_company_user', 'is_active']
+    list_display = ['company', 'username', 'weight',
+                    'phone_no', 'is_company_user', 'is_active']
     ordering = ('username',)
     list_display_links = ('username',)
     fieldsets = (
         (None, {'fields': ['username', 'weight', 'user_type', 'company']}),
-        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_no', 'block_no', 'unit_no')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'phone_no')}),
         ('Permissions', {'fields': [
          'groups', 'is_staff', 'is_active', 'password']}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
+            'fields': ['username', 'phone_no', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
          ),
     )
+    inlines = [
+        LotDetailsInline
+    ]
 
     def is_company_user(self, obj):
         return obj.user_type == USER_TYPE_COMPANY
@@ -73,7 +84,7 @@ class AuthUserAdmin(UserAdmin):
     def get_list_display(self, request):
         list_display = copy.deepcopy(self.list_display)
         if not request.user.is_superuser:
-            list_display.pop(0)
+            del list_display['company']
         return list_display
 
     def get_queryset(self, request):
@@ -88,17 +99,24 @@ class AuthUserAdmin(UserAdmin):
                 fieldsets = copy.deepcopy(self.fieldsets)
             else:
                 fieldsets = (
-                    (None, {'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'company']}),
-                    ('Permissions', {'fields': ['is_active', 'password']}),
+                    (None, {'fields': ['username',
+                                       'weight', 'user_type', 'company']}),
+                    ('Personal info', {
+                     'fields': ('first_name', 'last_name', 'phone_no')}),
+                    ('Permissions', {'fields': [
+                     'groups', 'is_staff', 'is_active', 'password']}),
                 )
         else:
             if request.user.is_superuser:
                 fieldsets = copy.deepcopy(self.add_fieldsets)
-                self.add_form = CustomCompanyCreationForm
+                # self.add_form = CustomCompanyCreationForm
             else:
-                self.add_form = CustomUserCreationForm
+                # self.add_form = CustomUserCreationForm
                 fieldsets = (
-                    (None, {'fields': ['username', 'phone_no', 'block_no', 'unit_no', 'weight', 'password1', 'password2']}),
+                    (None, {
+                        'classes': ('wide',),
+                        'fields': ['username', 'phone_no', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
+                     ),
                 )
         # print('get_fieldsets', fieldsets)
         return fieldsets
@@ -113,6 +131,19 @@ class AuthUserAdmin(UserAdmin):
 
     # def get_changeform_initial_data(self, request):
     #     return {'company_user': request.user}
+
+
+@admin.register(Lot)
+class LotAdmin(admin.ModelAdmin):
+    list_display = ['user', 'block_no', 'unit_no']
+    ordering = ('user',)
+    list_display_links = ('user',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        return queryset.filter(company=request.user.company)
 
 
 # @admin.register(CompanyUser)
