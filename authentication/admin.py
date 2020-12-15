@@ -102,23 +102,21 @@ class AuthUserAdmin(UserAdmin):
                 fieldsets = copy.deepcopy(self.fieldsets)
             else:
                 fieldsets = (
-                    (None, {'fields': ['username',
-                                       'weight', 'user_type', 'company']}),
+                    (None, {'fields': ['username', 'weight']}),
                     ('Personal info', {
                      'fields': ('first_name', 'last_name', 'phone_no')}),
-                    ('Permissions', {'fields': [
-                     'groups', 'is_staff', 'is_active', 'password']}),
+                    ('Permissions', {'fields': ['is_active', 'password']}),
                 )
         else:
             if request.user.is_superuser:
                 fieldsets = copy.deepcopy(self.add_fieldsets)
                 # self.add_form = CustomCompanyCreationForm
             else:
-                # self.add_form = CustomUserCreationForm
+                self.add_form = CustomUserCreationForm
                 fieldsets = (
                     (None, {
                         'classes': ('wide',),
-                        'fields': ['username', 'phone_no', 'weight', 'user_type', 'company', 'password1', 'password2', 'is_staff']}
+                        'fields': ['username', 'phone_no', 'weight', 'password1', 'password2']}
                      ),
                 )
         # print('get_fieldsets', fieldsets)
