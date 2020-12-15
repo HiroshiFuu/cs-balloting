@@ -52,13 +52,14 @@ class AuthUser(AbstractUser):
         managed = True
         verbose_name = 'User'
         verbose_name_plural = 'Users'
+        ordering = ['company', 'user_type', 'username']
 
     def __str__(self):
         return '{} {} {}'.format(self.username, self.user_type, self.company)
 
     def lots_details(self):
         "Returns the person's lots details."
-        return [lot.block_no + ' ' + lot.unit_no for lot in self.user_lots.all()]
+        return ['Blk ' + lot.block_no + ' ' + lot.unit_no for lot in self.user_lots.all()]
 
     def _has_lot(self):
         "Returns whether the person owns a nuit."
@@ -79,6 +80,7 @@ class Lot(LogMixin):
         managed = True
         verbose_name = 'Lot'
         verbose_name_plural = 'Lots'
+        order_with_respect_to = 'user'
 
     def __str__(self):
         return '{}: {} {}'.format(self.user, self.block_no, self.unit_no)

@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.admin import GroupAdmin
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from django.db.models import Q
 
@@ -53,13 +54,14 @@ class LotDetailsInline(admin.TabularInline):
     fk_name = 'user'
     extra = 0
     per_page = 3
+    exclude = ('created_by', 'modified_by')
 
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
     list_display = ['company', 'username', 'weight', 'phone_no',
                     '_has_lot', 'lots_details', 'is_company_user', 'is_active']
-    ordering = ('company', 'username')
+    ordering = ('company', 'user_type', 'username')
     list_display_links = ('company', 'username')
     fieldsets = (
         (None, {'fields': ['username', 'weight', 'user_type', 'company']}),
@@ -85,7 +87,7 @@ class AuthUserAdmin(UserAdmin):
     def get_list_display(self, request):
         list_display = copy.deepcopy(self.list_display)
         if not request.user.is_superuser:
-            del list_display['company']
+            list_display.remove('company')
         return list_display
 
     def get_queryset(self, request):
@@ -139,12 +141,19 @@ class LotAdmin(admin.ModelAdmin):
     list_display = ['user', 'block_no', 'unit_no']
     ordering = ('user',)
     list_display_links = ('user',)
+    exclude = ('created_by', 'modified_by')
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             return queryset
         return queryset.filter(user__company=request.user.company)
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == 'user':
+            if not request.user.is_superuser:
+                kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+        return super(LotAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 # @admin.register(CompanyUser)
