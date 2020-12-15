@@ -57,9 +57,19 @@ class AuthUser(AbstractUser):
     def __str__(self):
         return '{} {} {}'.format(self.username, self.user_type, self.company)
 
+    @property
+    def unit_no(self):
+        "Returns the person's unit no.(s)"
+        return ', '.join([lot.unit_no for lot in self.user_lots.all()])
+
     def lots_details(self):
         "Returns the person's lots details."
         return ['Blk ' + lot.block_no + ' ' + lot.unit_no for lot in self.user_lots.all()]
+
+    @property
+    def lots(self):
+        "Returns the numbers of person's owned units"
+        return self.user_lots.count()
 
     def _has_lot(self):
         "Returns whether the person owns a nuit."

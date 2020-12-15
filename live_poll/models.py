@@ -60,6 +60,7 @@ class LivePollBatch(LogMixin):
 
 class LivePollItemVote(LogMixin):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='user_votes', on_delete=models.PROTECT)
+    lots = models.SmallIntegerField('Number of Lots', default=0)
     ip_address = models.CharField('IP Address', max_length=15, null=True, blank=True)
     user_agent = models.CharField('User Agent', max_length=255, null=True, blank=True)
     poll_item = models.ForeignKey(LivePollItem, related_name='item_votes', on_delete=models.PROTECT)

@@ -239,11 +239,11 @@ def live_poll_vote(request, live_poll_id):
         vote = LivePollItemVote.objects.filter(user=request.user, poll_item=poll_item, vote_option=live_poll_option, poll_batch=batch).first()
         if vote is None:
             # print(get_client_ip(request), get_client_agent(request))
-            LivePollItemVote.objects.create(user=request.user, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
+            LivePollItemVote.objects.create(user=request.user, lots=request.user.lots, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request))
             proxy = LivePollProxy.objects.filter(poll_batch=batch, main_user=request.user).first()
             if proxy is not None:
                 for proxy_user in proxy.proxy_users.all():
-                    LivePollItemVote.objects.create(user=proxy_user, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request), proxy_user=request.user)
+                    LivePollItemVote.objects.create(user=proxy_user, lots=proxy_user.lots, poll_item=poll_item, poll_batch=batch, vote_option=live_poll_option, ip_address=get_client_ip(request), user_agent=get_client_agent(request), proxy_user=request.user)
             compute_live_poll_voting_result(live_poll)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
         else:
