@@ -45,10 +45,11 @@ td.status > .dropdown-icon {
                   </td>
                   <td class="text-left status">
                     {% for item in poll_details.items %}
-                    {{ item.text }}:&nbsp;{{ item.votes }} ({{ item.votes_addon }})&nbsp;&nbsp;
+                    {{ item.text }}:&nbsp;{{ item.votes }}
                     {% endfor %}
                     &nbsp;&nbsp;
-                    <i class="dropdown-icon fa fa-user-times"></i>{{ poll_details.miss }}&nbsp;({{ poll_details.miss_addon }})
+                    <i class="dropdown-icon fa fa-user-times"></i>{{ poll_details.miss }}
+                    <i class="dropdown-icon fa fa-user"></i>{{ poll_details.total }}
                   </td>
                   <td class="text-center">
                     {% if poll_details.is_open %}

@@ -69,13 +69,13 @@ require(['jquery'], function() {
 
   var limit = 2;
   $("input:checkbox").click(function() {
-    var bol = $("input:checkbox:checked").length >= { { live_poll.allocation } };
+    var bol = $("input:checkbox:checked").length >= {{ live_poll.allocation }};
     $("input:checkbox").not(":checked").attr("disabled", bol);
     var bol2 = $("input:checkbox:checked").length == 0;
     $("#btnSubmit").prop("disabled", bol2);
   });
   
-  var poll_status = {% if poll_item %}"open"{% else %}"close"{% endif %};
+  var poll_status = {%if live_poll %}"open"{% else %}"close"{% endif %};
   var need_to_reload = false;
   var check_seconds_left = setInterval(function() {
     $.get("{% url 'live_poll_multiple:live_voting_multiple_openning_json' %}",

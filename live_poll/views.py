@@ -170,7 +170,7 @@ def live_voting(request):
                     #     for user in AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True):
                     #         item['miss_addon'] += user.weight
                     item['miss'] = item['total'] - for_count - abstain_count - against_count
-                    print(item)
+                    # print(item)
                     items.append(item)
 
                     if poll_item.is_open:
