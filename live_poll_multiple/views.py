@@ -225,9 +225,9 @@ def compute_live_poll_multiple_voting_result(live_poll):
     for poll_item in LivePollMultipleItem.objects.filter(live_poll=live_poll):
         result = {'option': poll_item.text, 'votes': 0, 'proxy_votes': 0}
         result['votes'] = poll_item.multiple_item_votes.filter(
-            proxy_user=None).count()
+            proxy_user=None).aggregate(Sum('lots'))['lots__sum'] or 0
         result['proxy_votes'] = poll_item.multiple_item_votes.exclude(
-            proxy_user=None).count()
+            proxy_user=None).aggregate(Sum('lots'))['lots__sum'] or 0
         results.append(result)
     # print('compute_live_poll_multiple_voting_result', live_poll, results)
     live_poll_result.result = results

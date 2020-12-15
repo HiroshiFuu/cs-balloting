@@ -283,8 +283,8 @@ def compute_live_poll_voting_result(live_poll):
                     result['votes'] += vote.user.weight
                 result['counts'] = votes.count()
             if item.poll_type == POLL_TYPE_BY_LOT:
-                result['votes'] = votes.count()
-                result['proxy_votes'] = votes.exclude(proxy_user=None).count()
+                result['votes'] = votes.aggregate(Sum('lots'))['lots__sum'] or 0
+                result['proxy_votes'] = votes.exclude(proxy_user=None).aggregate(Sum('lots'))['lots__sum'] or 0
             results.append(result)
         item_result[item.text] = results
     # print('compute_live_poll_voting_result', item_result)

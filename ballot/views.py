@@ -447,6 +447,7 @@ def dashboard(request):
             }
         # print(survey_chart_data)
         survey_votings = SurveyVote.objects.all()
+        
         live_poll_votings = []
         for vote in LivePollItemVote.objects.filter(poll_item__poll__company=user_company, poll_item__poll__is_chosen=True).order_by('poll_batch', 'poll_item__order'):
             voting_detail = {}

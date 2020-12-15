@@ -46,7 +46,7 @@ def survey(request, survey_id):
     vote = SurveyVote.objects.filter(
         user=request.user, survey_option__survey=survey).first()
     if vote is not None:
-        return HttpResponseRedirect(reverse('survey:vote_done', args=(survey.id, vote.survey_option.id)))
+        return HttpResponseRedirect(reverse('survey:survery_vote_done', args=(survey.id, vote.survey_option.id)))
     return render(request, 'survey.html', {'survey': survey})
 
 
