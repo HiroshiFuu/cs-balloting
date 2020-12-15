@@ -121,6 +121,11 @@ class CustomUserCreationForm(UserCreationForm):
     #     required=True,
     #     disabled=True
     # )
+    is_staff = forms.BooleanField(
+        label="Is Company User",
+        initial=True,
+        required=False,
+    )
     password1 = forms.CharField(
         label=_("Password"),
         strip=False,
