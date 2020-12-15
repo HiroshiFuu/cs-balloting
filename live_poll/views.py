@@ -97,7 +97,8 @@ def live_voting(request):
         has_voting_opened = False
         if poll:
             # compute_live_poll_voting_result(poll)
-            count_users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True).count()
+            users = AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True)
+            count_users = users.count()
             poll_details['id'] = poll.id
             poll_details['title'] = poll.title
             batch = poll.batchs.order_by('-batch_no').first()
@@ -105,6 +106,8 @@ def live_voting(request):
             batch_no = None
             if batch is not None:
                 batch_no = batch.batch_no
+                total_lots = users.aggregate(Sum('user_lots'))['user_lots__sum'] or 0
+                total_shares = users.aggregate(Sum('weight'))['weight__sum'] or 0
                 for poll_item in poll.items.all():
                     item = {}
                     item['id'] = poll_item.id
@@ -114,48 +117,60 @@ def live_voting(request):
 
                     item_result = {}
                     for_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=1, poll_batch=batch)
-                    for_count = for_votes.count()
-                    for_addon_count = 0
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                        for_addon_count = for_votes.filter(proxy_user=None).count()
+                        # for_count = for_votes.count()
+                        for_count = for_votes.aggregate(Sum('lots'))['lots__sum'] or 0
+                    # for_addon_count = 0
+                    # if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                    #     for_addon_count = for_votes.filter(proxy_user=None).count()
                     if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                        for vote in for_votes:
-                            for_addon_count += vote.user.weight
+                        for_count = for_votes.aggregate(Sum('user__weight'))['user__weight__sum'] or 0
+                        # for vote in for_votes:
+                        #     for_addon_count += vote.user.weight
                     item_result['for'] = for_count
-                    item_result['for_addon'] = for_addon_count
+                    # item_result['for_addon'] = for_addon_count
 
                     abstain_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=2, poll_batch=batch)
-                    abstain_count = abstain_votes.count()
-                    abstain_addon_count = 0
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                        abstain_addon_count = abstain_votes.filter(proxy_user=None).count()
+                        # abstain_count = abstain_votes.count()
+                        abstain_count = abstain_votes.aggregate(Sum('lots'))['lots__sum'] or 0
+                    # abstain_addon_count = 0
+                    # if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                    #     abstain_addon_count = abstain_votes.filter(proxy_user=None).count()
                     if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                        for vote in abstain_votes:
-                            abstain_addon_count += vote.user.weight
+                        abstain_count = abstain_votes.aggregate(Sum('user__weight'))['user__weight__sum'] or 0
+                        # for vote in abstain_votes:
+                        #     abstain_addon_count += vote.user.weight
                     item_result['abstain'] = abstain_count
-                    item_result['abstain_addon'] = abstain_addon_count
+                    # item_result['abstain_addon'] = abstain_addon_count
 
                     against_votes = LivePollItemVote.objects.filter(poll_item=poll_item, vote_option=3, poll_batch=batch)
-                    against_count = against_votes.count()
-                    against_addon_count = 0
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                        against_addon_count = against_votes.filter(proxy_user=None).count()
+                        # against_count = against_votes.count()
+                        against_count = against_votes.aggregate(Sum('lots'))['lots__sum'] or 0
+                    # against_addon_count = 0
+                    # if poll_item.poll_type == POLL_TYPE_BY_LOT:
+                    #     against_addon_count = against_votes.filter(proxy_user=None).count()
                     if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                        for vote in against_votes:
-                            against_addon_count += vote.user.weight
+                        against_count = against_votes.aggregate(Sum('user__weight'))['user__weight__sum'] or 0
+                        # for vote in against_votes:
+                        #     against_addon_count += vote.user.weight
                     item_result['against'] = against_count
-                    item_result['against_addon'] = against_addon_count
+                    # item_result['against_addon'] = against_addon_count
                     item['result'] = item_result
                     
-                    item['miss'] = count_users - for_votes.count() - abstain_votes.count() - against_votes.count()
-                    item['miss_addon'] = 0
-                    if poll_item.poll_type == POLL_TYPE_BY_SHARE:
-                        for user in AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True):
-                            item['miss_addon'] += user.weight
+                    # item['miss_addon'] = 0
                     if poll_item.poll_type == POLL_TYPE_BY_LOT:
-                        for proxy_user in batch.poll_batch_proxys.all():
-                            item['miss_addon'] += proxy_user.proxy_users.count()
-                    item['miss_addon'] = item['miss_addon'] - for_addon_count - abstain_addon_count - against_addon_count
+                        item['total'] = total_lots
+                    #     for proxy_user in batch.poll_batch_proxys.all():
+                    #         item['miss_addon'] += proxy_user.proxy_users.count()
+                    # item['miss_addon'] = item['miss_addon'] - for_addon_count - abstain_addon_count - against_addon_count
+                    if poll_item.poll_type == POLL_TYPE_BY_SHARE:
+                        item['total'] = total_shares
+                    #     for user in AuthUser.objects.filter(user_type=USER_TYPE_USER, company=user_company, is_active=True):
+                    #         item['miss_addon'] += user.weight
+                    item['miss'] = item['total'] - for_count - abstain_count - against_count
+                    print(item)
                     items.append(item)
 
                     if poll_item.is_open:

@@ -47,11 +47,12 @@ td.status > .dropdown-icon {
                     <div>{{ forloop.counter }}. {{ item.text }} (By {% if item.type == 1 %}Share{% endif %}{% if item.type == 2 %}Lot{% endif %})</div>
                   </td>
                   <td class="text-left status text-nowrap">
-                    <b>For:</b>&nbsp;{{ item.result.for }}({{ item.result.for_addon }})&nbsp;&nbsp;
-                    <b>Against:</b>&nbsp;{{ item.result.against }}({{ item.result.against_addon }})&nbsp;&nbsp;
-                    <b>Abstain:</b>&nbsp;{{ item.result.abstain }}({{ item.result.abstain_addon }})&nbsp;&nbsp;
+                    <b>For:</b>&nbsp;{{ item.result.for }}&nbsp;&nbsp;
+                    <b>Against:</b>&nbsp;{{ item.result.against }}&nbsp;&nbsp;
+                    <b>Abstain:</b>&nbsp;{{ item.result.abstain }}&nbsp;&nbsp;
                     &nbsp;&nbsp;
-                    <i class="dropdown-icon fa fa-user-times"></i>{{ item.miss }}({{ item.miss_addon }})
+                    <i class="dropdown-icon fa fa-user-times"></i>{{ item.miss }}
+                    <i class="dropdown-icon fa fa-user"></i>{{ item.total }}
                   </td>
                   <td class="text-center text-nowrap">
                     {% if item.is_open %}
