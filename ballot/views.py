@@ -61,10 +61,10 @@ def populate_pdf_context(request, app=None, id=None):
     if app is not None:
         users = AuthUser.objects.filter(
             user_type=USER_TYPE_USER, company=user_company, is_active=True)
-        total_lots = users.count()
-        total_shares = 0
-        for user in users:
-            total_shares += user.weight
+        total_lots = users.aggregate(Sum('user_lots'))['user_lots__sum'] or 0
+        total_shares = users.aggregate(Sum('weight'))['weight__sum'] or 0
+        # for user in users:
+        #     total_shares += user.weight
         agm_overview = {'total_lots': total_lots,
                         'total_shares': total_shares, 'survey': None}
 
@@ -82,11 +82,14 @@ def populate_pdf_context(request, app=None, id=None):
             context['page_no'] = page_no = 1
 
             lpm_attendee_pages = {}
-            for idx, vote in enumerate(votes, start=0):
-                if attendee_count % UERS_PER_PAGE_DETAILS == 0:
+            voted_users_ids = set(votes.values_list('user', flat=True).distinct())
+            voted_users = users.filter(id__in=voted_users_ids)
+            for idx, user in enumerate(voted_users, start=0):
+                if idx % UERS_PER_PAGE_DETAILS == 0:
                     page_no += 1
                     lpm_attendee_pages[str(page_no)] = {}
                     lpm_attendees = []
+                vote = votes.filter(user=user).earliest('created_at')
                 lpm_attendee = {}
                 lpm_attendee['unit_no'] = vote.user.unit_no
                 lpm_attendee['name'] = vote.user.username
@@ -101,12 +104,31 @@ def populate_pdf_context(request, app=None, id=None):
                 lpm_attendee['user_agent'] = vote.user_agent
                 lpm_attendees.append(lpm_attendee)
                 lpm_attendee_pages[str(page_no)]['attendees'] = lpm_attendees
+            # for idx, vote in enumerate(votes.filter(proxy_user=None), start=0):
+            #     if idx % UERS_PER_PAGE_DETAILS == 0:
+            #         page_no += 1
+            #         lpm_attendee_pages[str(page_no)] = {}
+            #         lpm_attendees = []
+            #     lpm_attendee = {}
+            #     lpm_attendee['unit_no'] = vote.user.unit_no
+            #     lpm_attendee['name'] = vote.user.username
+            #     for proxy in LivePollMultipleProxy.objects.filter(live_poll=obj):
+            #         if vote.user in proxy.proxy_users.all():
+            #             lpm_attendee['name'] += ' (Proxy ' + \
+            #                 proxy.main_user.username + ')'
+            #             break
+            #     lpm_attendee['phone_no'] = vote.user.phone_no
+            #     lpm_attendee['voted_at'] = vote.created_at
+            #     lpm_attendee['ip_address'] = vote.ip_address
+            #     lpm_attendee['user_agent'] = vote.user_agent
+            #     lpm_attendees.append(lpm_attendee)
+            #     lpm_attendee_pages[str(page_no)]['attendees'] = lpm_attendees
             # print('render_pdf', 'lpm_attendee_pages', lpm_attendee_pages)
             context['attendee_pages'] = lpm_attendee_pages
 
             lpm_record_pages = {}
-            record_count = 0
-            for idx_item, item in enumerate(LivePollMultipleItem.objects.filter(live_poll=obj), start=0):
+            for idx_item, item in enumerate(obj.multiple_items.all(), start=0):
+                record_count = 0
                 for idx_user, user in enumerate(users, start=0):
                     if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
@@ -177,8 +199,8 @@ def populate_pdf_context(request, app=None, id=None):
             context['attendee_pages'] = lp_attendee_pages
 
             lp_record_pages = {}
-            record_count = 0
             for idx_item, item in enumerate(LivePollItem.objects.filter(poll=obj), start=0):
+                record_count = 0
                 for idx_user, user in enumerate(users, start=0):
                     if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
@@ -244,8 +266,8 @@ def populate_pdf_context(request, app=None, id=None):
             context['attendee_pages'] = sv_attendee_pages
 
             sv_record_pages = {}
-            record_count = 0
             for idx_item, option in enumerate(obj.survey_options.all(), start=0):
+                record_count = 0
                 for idx_user, user in enumerate(users, start=0):
                     if record_count % UERS_PER_PAGE == 0:
                         page_no += 1
