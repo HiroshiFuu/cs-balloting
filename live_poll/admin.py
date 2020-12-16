@@ -80,6 +80,7 @@ class LivePollItemAdmin(SortableAdminMixin, ExportMixin, admin.ModelAdmin):
     ]
     list_display_links = ('text', )
     search_fields = ['text', 'poll']
+    list_filter = ('poll', 'poll_type')
     exclude = ('created_by', 'modified_by')
 
     def get_queryset(self, request):
