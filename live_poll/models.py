@@ -39,7 +39,7 @@ class LivePollItem(LogMixin):
         verbose_name = 'Live Poll Item'
         verbose_name_plural = 'Live Poll Items'
         unique_together = ('poll', 'order')
-        ordering = ['poll__company', 'order']
+        ordering = ['order']
 
     def __str__(self):
         return '{}: {}.{}'.format(self.poll, self.order, self.text)
