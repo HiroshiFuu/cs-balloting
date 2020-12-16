@@ -60,7 +60,7 @@ def live_voting_multiple(request):
         users = AuthUser.objects.filter(
             user_type=USER_TYPE_USER, company=user_company, is_active=True)
         count_users = users.count()
-        # total_lots = users.aggregate(Sum('user_lots'))['user_lots__sum'] or 0
+        # total_lots = users.aggregate(Count('user_lots'))['user_lots__count'] or 0
         for poll in polls:
             poll_details = {}
             poll_details['id'] = poll.id

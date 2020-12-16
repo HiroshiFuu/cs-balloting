@@ -90,7 +90,7 @@ class LivePollItemAdmin(SortableAdminMixin, ExportMixin, admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:
-            return super(LivePollMultipleAdmin, self).get_readonly_fields(request, obj)
+            return super(LivePollItemAdmin, self).get_readonly_fields(request, obj)
         else:
             return ('is_open', 'opened_at')
 
