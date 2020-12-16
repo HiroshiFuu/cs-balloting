@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Live Poll Items',
                 'ordering': ['order'],
                 'managed': True,
-                'unique_together': {('text', 'poll')},
+                'unique_together': {('order', 'poll')},
             },
         ),
         migrations.CreateModel(
