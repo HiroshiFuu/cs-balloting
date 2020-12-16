@@ -59,10 +59,11 @@ class LotDetailsInline(admin.TabularInline):
 
 @admin.register(AuthUser)
 class AuthUserAdmin(UserAdmin):
-    list_display = ['company', 'username', 'weight', 'phone_no',
-                    '_has_lot', 'lots_details', 'is_company_user', 'is_active']
+    list_display = ['company', 'username', 'weight', 'phone_no', '_has_lot', 'lots', 'lots_details', 'is_company_user', 'is_active']
     ordering = ('company', 'user_type', 'username')
     list_display_links = ('company', 'username')
+    list_filter = ('company', 'is_active')
+    search_fields = ['company', 'username', 'weight']
     fieldsets = (
         (None, {'fields': ['username', 'weight', 'user_type', 'company']}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'phone_no')}),
@@ -150,7 +151,8 @@ class LotAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == 'user':
             if not request.user.is_superuser:
-                kwargs['queryset'] = get_user_model().objects.filter(company=request.user.company, is_staff=False)
+                kwargs['queryset'] = get_user_model().objects.filter(
+                    company=request.user.company, is_staff=False)
         return super(LotAdmin, self).formfield_for_foreignkey(db_field, request, **kwargs)
 
 

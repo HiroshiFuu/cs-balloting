@@ -61,7 +61,7 @@ def populate_pdf_context(request, app=None, id=None):
     if app is not None:
         users = AuthUser.objects.filter(
             user_type=USER_TYPE_USER, company=user_company, is_active=True)
-        total_lots = users.aggregate(Sum('user_lots'))['user_lots__sum'] or 0
+        total_lots = users.aggregate(Count('user_lots'))['user_lots__count'] or 0
         total_shares = users.aggregate(Sum('weight'))['weight__sum'] or 0
         # for user in users:
         #     total_shares += user.weight

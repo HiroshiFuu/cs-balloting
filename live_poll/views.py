@@ -106,7 +106,7 @@ def live_voting(request):
             batch_no = None
             if batch is not None:
                 batch_no = batch.batch_no
-                total_lots = users.aggregate(Sum('user_lots'))['user_lots__sum'] or 0
+                total_lots = users.aggregate(Count('user_lots'))['user_lots__count'] or 0
                 total_shares = users.aggregate(Sum('weight'))['weight__sum'] or 0
                 for poll_item in poll.items.all():
                     item = {}
