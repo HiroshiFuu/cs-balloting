@@ -28,7 +28,7 @@ class LivePoll(LogMixin):
 class LivePollItem(LogMixin):
     poll = models.ForeignKey(LivePoll, related_name='items', on_delete=models.PROTECT)
     order = models.PositiveSmallIntegerField('Sequence Order', default=0)
-    text = models.CharField(max_length=255)
+    text = models.CharField(max_length=511)
     is_open = models.BooleanField('Is Open', default=False)
     opened_at = models.DateTimeField('Vote Opened At', null=True, blank=True)
     opening_duration_minustes = models.PositiveSmallIntegerField('Vote Opening Duration Minustes', default=5)
