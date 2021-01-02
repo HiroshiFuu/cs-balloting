@@ -65,7 +65,7 @@ def populate_pdf_context(request, app=None, id=None):
         total_shares = users.aggregate(Sum('weight'))['weight__sum'] or 0
         # for user in users:
         #     total_shares += user.weight
-        agm_overview = {'total_lots': total_lots,
+        agm_overview = {'app': app, 'total_lots': total_lots,
                         'total_shares': total_shares, 'survey': None}
 
         if app == 'LPM':
@@ -75,6 +75,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             context['app'] = '(Live Poll Multiple)'
             agm_overview['batch_no'] = obj.batch_no
+            agm_overview['title'] = 'Annual General Meeting of the Management Corportation Strata Title Plan'
             agm_overview['meeting_started'] = obj.opened_at
             agm_overview['meeting_closed'] = votes.last().created_at
 
@@ -163,6 +164,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             context['app'] = '(Live Poll)'
             agm_overview['batch_no'] = batch.batch_no
+            agm_overview['title'] = obj.title
             agm_overview['meeting_started'] = obj.items.order_by('-opened_at').first().created_at
             agm_overview['meeting_closed'] = votes.last().created_at
 
@@ -234,7 +236,7 @@ def populate_pdf_context(request, app=None, id=None):
 
             context['app'] = '(Survey)'
             agm_overview['batch_no'] = obj.id
-            agm_overview['survey'] = obj.title
+            agm_overview['title'] = obj.title
             agm_overview['meeting_started'] = 'N/A'
             agm_overview['meeting_closed'] = 'N/A'
 

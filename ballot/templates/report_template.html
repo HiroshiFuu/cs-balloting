@@ -24,7 +24,7 @@
     <table>
       <tr>
         <td>Title</td>
-        <td>Annual General Meeting of the Management Corportation Strata Title Plan {% if not agm_overview.survey %}No. {{ agm_overview.batch_no }}{% else %}{{ agm_overview.survey }}{% endif %}</td>
+        <td>{{ agm_overview.title }} {% if agm_overview.app != "SV" %} No. {{ agm_overview.batch_no }} {% endif %}</td>
       </tr>
       <tr>
         <td>Venue</td>
