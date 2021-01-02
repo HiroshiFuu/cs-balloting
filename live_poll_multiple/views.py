@@ -209,7 +209,7 @@ def live_poll_multiple_vote(request, live_poll_id):
                         LivePollMultipleItemVote.objects.create(user=proxy_user, lots=proxy_user.lots, live_poll_item=live_poll_item, ip_address=get_client_ip(
                             request), user_agent=get_client_agent(request), proxy_user=request.user)
                 compute_live_poll_multiple_voting_result(live_poll)
-            return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
+            return HttpResponseRedirect(reverse('live_poll_multiple:cur_live_voting_multiple', args=()))
         else:
             print('Something Wrong', 'live_poll_multiple vote', live_poll_id)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
