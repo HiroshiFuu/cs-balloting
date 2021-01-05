@@ -38,7 +38,6 @@ LOGGING = {
             'level': 'DEBUG',
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': '/home/it/cs-balloting/debug.log',
-            'maxBytes': 10 * 1024 * 1024,
             'backupCount': 30,
             'when': 'midnight',
             'formatter': 'verbose'
