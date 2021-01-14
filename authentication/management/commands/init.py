@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         group, created = Group.objects.get_or_create(name='CompanyUserGroup')
-        print(group)
+        print('Init Group', group)
         permissions = ['Can add User', 'Can change User', 'Can delete User', 'Can view User', 'Can add Survey', 'Can change Survey', 'Can delete Survey', 'Can view Survey', 'Can add Survey Option', 'Can change Survey Option', 'Can delete Survey Option', 'Can view Survey Option', 'Can view Survey Result', 'Can view Survey Vote']
         for p_name in permissions:
             permission = Permission.objects.get(name__iexact=p_name)
