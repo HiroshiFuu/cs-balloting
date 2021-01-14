@@ -5,6 +5,8 @@ SECRET_KEY = 'za#q^j+$6frru&3*)b0yl=#9wmue%rf38akqux(fjvl-&zy@_l'
 
 DEBUG = True
 
+ALLOWED_HOSTS = ['*']
+
 RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:8000'
 
 DATABASES = {
@@ -27,4 +29,4 @@ ENVIRON_APPS = [
 
 INSTALLED_APPS += ENVIRON_APPS
 
-WKHTMLTOPDF_CMD = 'C:\\Program Files\\wkhtmltopdf\\bin'
+WKHTMLTOPDF_CMD = 'D:\\Tools\\wkhtmltopdf\\bin'
