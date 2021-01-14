@@ -1,8 +1,9 @@
-Django>=2.2,<2.3
+Django
 gunicorn
 whitenoise
 Werkzeug
 django-environ
+django-jazzmin
 python-decouple
 jsonfield
 django-extensions
