@@ -44,6 +44,7 @@ THIRD_PARTY_APPS = [
     'import_export',
     'adminsortable2',
     'django_user_agents',
+    'rest_framework',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
