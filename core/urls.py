@@ -13,6 +13,7 @@ urlpatterns = [
     path('', include('survey.urls')),
     path('', include('live_poll.urls')),
     path('', include('live_poll_multiple.urls')),
+    path('', include('api.urls')),
 ]
 
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
