@@ -264,7 +264,7 @@ def live_poll_vote(request, live_poll_id):
         else:
             print('Something Wrong', 'live_poll_vote', live_poll_id)
             return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
-    except (KeyError, LivePollItem.DoesNotExist, LivePollItem.DoesNotExist):
+    except (KeyError, LivePollItem.DoesNotExist):
         return HttpResponseRedirect(reverse('ballot:dashboard', args=()))
     return HttpResponseRedirect(reverse('live_poll:cur_live_voting', args=()))
 

@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -13,7 +13,7 @@ urlpatterns = [
     path('', include('survey.urls')),
     path('', include('live_poll.urls')),
     path('', include('live_poll_multiple.urls')),
-    path('', include('api.urls')),
+    re_path(r'^api/', include('api.urls', namespace='api'))
 ]
 
 # urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
