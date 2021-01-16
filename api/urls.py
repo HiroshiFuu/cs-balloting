@@ -7,6 +7,6 @@ from api import views
 app_name = 'api'
 
 urlpatterns = [
-    # Matches any html file
-    
+    path('cur_live_poll_item/', views.RetriveCurLivePollItem.as_view()),
+    path('vote_cur_live_poll/', views.VoteCurLivePollItem.as_view()),    
 ]
