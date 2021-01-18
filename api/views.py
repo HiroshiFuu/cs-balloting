@@ -76,10 +76,7 @@ class LivePollStatus(APIView):
         if poll_item:
             opening_seconds_left = int(poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds())
             if opening_seconds_left < 0:
-                opening_seconds_left = 0
-            if opening_seconds_left == 0 and poll_item.is_open:
-                poll_item.is_open = False
-                poll_item.save()
+                opening_seconds_left = -1
             opening_data = {
                 'poll_item_id': poll_item.pk,
                 'opened_at': poll_item.opened_at,
