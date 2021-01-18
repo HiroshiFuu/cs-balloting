@@ -37,6 +37,7 @@ LOCAL_APPS = [ # Enable the inner app
     'live_poll',
     'live_poll_multiple',
     'ballot',
+    'api'
 ]
 
 THIRD_PARTY_APPS = [
