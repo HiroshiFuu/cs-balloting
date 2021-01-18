@@ -68,6 +68,29 @@ class RetriveCurLivePollItem(APIView):
         return Response(serializer.data)
 
 
+class LivePollStatus(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        poll_item = LivePollItem.objects.filter(poll__company=request.user.company, is_open=True).first()
+        if poll_item:
+            opening_seconds_left = int(poll_item.opening_duration_minustes * 60 - (datetime.now() - poll_item.opened_at).total_seconds())
+            if opening_seconds_left < 0:
+                opening_seconds_left = 0
+            if opening_seconds_left == 0 and poll_item.is_open:
+                poll_item.is_open = False
+                poll_item.save()
+            opening_data = {
+                'poll_item_id': poll_item.pk,
+                'opened_at': poll_item.opened_at,
+                'opening_duration_minustes': poll_item.opening_duration_minustes,
+                'opening_seconds_left': opening_seconds_left
+            }
+            return Response(opening_data)
+        else:
+            return Response({'opening_seconds_left': -1})
+
+
 class VoteCurLivePollItem(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
