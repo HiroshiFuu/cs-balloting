@@ -7,52 +7,8 @@ from .deployment import *  # noqa: F401
 
 SECRET_KEY = 'jyejjj47s!t1zs%nd@8g4(+qmk(si66ekm1ki!_dhgoe_--iip'
 
-DEBUG = False
+DEBUG = True
 
 RUNSERVERPLUS_SERVER_ADDRESS_PORT = '0.0.0.0:443'
 
 SECURE_SSL_REDIRECT = True
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': True,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(lineno)d %(message)s',
-            'datefmt' : '%Y/%b/%d %H:%M:%S'
-        },
-        'simple': {
-            'format': '%(levelname)s %(module)s %(lineno)d %(message)s'
-        },
-    },
-    'handlers': {
-        'null': {
-            'level': 'DEBUG',
-            'class': 'logging.NullHandler',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.handlers.TimedRotatingFileHandler',
-            'filename': '/home/it/cs-balloting/debug.log',
-            'backupCount': 30,
-            'when': 'midnight',
-            'formatter': 'verbose'
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'werkzeug': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-            'propagate': True,
-        },
-    },
-}

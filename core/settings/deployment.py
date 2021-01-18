@@ -37,10 +37,11 @@ LOGGING = {
     'disable_existing_loggers': True,
     'formatters': {
         'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(lineno)d %(message)s',
+            'datefmt' : '%Y/%b/%d %H:%M:%S'
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '%(levelname)s %(module)s %(lineno)d %(message)s'
         },
     },
     'handlers': {
@@ -54,15 +55,18 @@ LOGGING = {
         },
         'file': {
             'level': 'DEBUG',
-            'class': 'logging.FileHandler',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
             'filename': '/home/it/cs-balloting/debug.log',
+            'backupCount': 30,
+            'when': 'midnight',
+            'formatter': 'verbose'
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console', 'file'],
-            'propagate': True,
             'level': 'INFO',
+            'propagate': True,
         },
         'werkzeug': {
             'handlers': ['console', 'file'],
