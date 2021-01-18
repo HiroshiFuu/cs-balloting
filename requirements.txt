@@ -18,3 +18,4 @@ mysqlclient
 # sudo apt-get install wkhtmltopdf
 django-wkhtmltopdf
 pdfkit
+django-cors-headers

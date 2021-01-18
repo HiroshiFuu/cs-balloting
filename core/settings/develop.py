@@ -25,8 +25,13 @@ DATABASES = {
 
 ENVIRON_APPS = [
     'wkhtmltopdf',
+    'corsheaders',
 ]
 
 INSTALLED_APPS += ENVIRON_APPS
 
 WKHTMLTOPDF_CMD = 'D:\\Tools\\wkhtmltopdf\\bin'
+
+MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
+
+CORS_ALLOW_ALL_ORIGINS = True
